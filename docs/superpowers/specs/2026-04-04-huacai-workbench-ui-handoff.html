@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>华彩系统 UI 改版交接简报</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #f6f9ff;
+      --primary: #1e40af;
+      --primary-hover: #1d4ed8;
+      --primary-accent: #3b82f6;
+      --primary-soft: rgba(59, 130, 246, 0.12);
+      --text: #132238;
+      --text-soft: #617186;
+      --border: rgba(148, 163, 184, 0.24);
+      --warning: #d97706;
+      --danger: #d9485f;
+      --success: #0f766e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      background: linear-gradient(180deg, #f8fafc, #eef4fb);
+      color: var(--text);
+      font: 14px/1.7 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 22px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .muted {
+      color: var(--text-soft);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(226, 232, 240, 0.6);
+      color: #455466;
+      font-size: 12px;
+    }
+
+    .pill.primary {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .tokens {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .token {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .swatch {
+      height: 42px;
+    }
+
+    .token div:last-child {
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .ok, .nope {
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .ok strong {
+      color: var(--success);
+    }
+
+    .nope strong {
+      color: var(--danger);
+    }
+
+    code {
+      background: rgba(226, 232, 240, 0.5);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 18px;
+      }
+
+      .grid,
+      .tokens,
+      .do-dont {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="panel">
+      <h1>华彩系统 UI 改版交接简报</h1>
+      <p class="muted" style="margin-top: 10px;">给 AI coding agent 的低 token 版本。目标是先建立统一 UI 基线，不扩散到全部业务页。</p>
+      <div class="pills">
+        <span class="pill primary">专业作业台</span>
+        <span class="pill primary">高密度但分层</span>
+        <span class="pill primary">A1 钴蓝企业版</span>
+        <span class="pill">Workbench First</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>严格范围</h2>
+        <ul>
+          <li><code>frontend/src/style.css</code></li>
+          <li><code>frontend/src/layout/AppLayout.vue</code></li>
+          <li><code>frontend/src/views/dashboard/WorkbenchView.vue</code></li>
+        </ul>
+        <p class="muted" style="margin-top: 10px;">不要顺手重构其他业务页，不要新增复杂依赖，不要引入图表库。</p>
+      </div>
+
+      <div class="panel">
+        <h2>布局基线</h2>
+        <ul>
+          <li>壳层：左导航 + 顶部页头 + 主内容区</li>
+          <li>工作台：标题区 + 统计卡 + 主体双栏</li>
+          <li>主体：左侧主列表，右侧待办/趋势/快捷入口</li>
+          <li>抽屉承载新增编辑，弹窗承载确认动作</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>颜色 Token</h2>
+      <div class="tokens">
+        <div class="token">
+          <div class="swatch" style="background:#1E40AF;"></div>
+          <div>Primary<br />#1E40AF</div>
+        </div>
+        <div class="token">
+          <div class="swatch" style="background:#3B82F6;"></div>
+          <div>Primary Accent<br />#3B82F6</div>
+        </div>
+        <div class="token">
+          <div class="swatch" style="background:#F8FAFC;"></div>
+          <div>Background<br />#F8FAFC</div>
+        </div>
+        <div class="token">
+          <div class="swatch" style="background:#FFFFFF;"></div>
+          <div>Surface<br />#FFFFFF</div>
+        </div>
+        <div class="token">
+          <div class="swatch" style="background:#F6F9FF;"></div>
+          <div>Surface Soft<br />#F6F9FF</div>
+        </div>
+        <div class="token">
+          <div class="swatch" style="background:#132238;"></div>
+          <div>Text<br />#132238</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>比例规则</h2>
+        <ul>
+          <li>页面主标题：26px</li>
+          <li>区块标题：16px</li>
+          <li>正文：14px</li>
+          <li>标签和辅助信息：12px</li>
+          <li>表格正文：13px</li>
+          <li>按钮高度：34px 到 36px</li>
+          <li>按钮和输入框圆角：10px</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2>组件规则</h2>
+        <ul>
+          <li>统计卡只保留 3 到 4 个</li>
+          <li>只有关键卡片能用主色弱底</li>
+          <li>主按钮钴蓝实底，次按钮白底浅边框</li>
+          <li>列表采用顶部统计条 + 折叠筛选 + 表格 + 分页</li>
+          <li>表格允许高密度，但不能拥挤</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Do / Don't</h2>
+      <div class="do-dont">
+        <div class="ok">
+          <strong>Do</strong>
+          <ul>
+            <li>让左侧主列表成为页面视觉中心</li>
+            <li>让图表和快捷入口服务主流程</li>
+            <li>用细边框、轻阴影、小一档字体建立精致感</li>
+            <li>让激活态、主按钮、关键数字统一用钴蓝</li>
+          </ul>
+        </div>
+        <div class="nope">
+          <strong>Don't</strong>
+          <ul>
+            <li>不要继续用暖米色和棕橙做主基调</li>
+            <li>不要大按钮、大圆角、厚卡片、强装饰</li>
+            <li>不要让图表比列表更抢眼</li>
+            <li>不要把复杂编辑流程跳转到新页面</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>验收</h2>
+      <ul>
+        <li><code>npm run build</code> 通过</li>
+        <li>页面不再出现暖米色和棕橙主基调</li>
+        <li>字体、按钮、卡片比例明显更收敛</li>
+        <li>Workbench 已经具备后续扩展为真实业务页的模板价值</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: huacai-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: huacai_system
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --innodb-buffer-pool-size=64M
+      - --innodb-log-buffer-size=8M
+      - --table-open-cache=128
+      - --performance-schema=OFF
+      - --mysqlx=0
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -proot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
+
+  backend-test:
+    image: maven:3.9.11-eclipse-temurin-21
+    container_name: huacai-backend-test
+    restart: unless-stopped
+    working_dir: /workspace
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      HUACAI_DB_URL: jdbc:mysql://huacai-mysql:3306/huacai_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      HUACAI_DB_USERNAME: root
+      HUACAI_DB_PASSWORD: root
+      HUACAI_JWT_SECRET: ${HUACAI_JWT_SECRET:-aHVhY2FpLXBoYXNlMS1sb2NhbC1qd3Qtc2VjcmV0LWZvci1kZXYtb25seS0zMmI=}
+      MAVEN_CONFIG: /root/.m2
+      MAVEN_OPTS: -Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m
+      JAVA_TOOL_OPTIONS: -XX:+UseSerialGC -XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=20
+    command:
+      - sh
+      - -lc
+      - mvn -Dmaven.test.skip=true spring-boot:run
+    ports:
+      - "18081:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 40s
+    volumes:
+      - ./backend:/workspace
+      - ${HOME}/.m2:/root/.m2
+
+volumes:
+  mysql-data:
+    name: 1025_mysql-data

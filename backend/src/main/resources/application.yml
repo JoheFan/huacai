@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: huacai-backend
+  datasource:
+    url: ${HUACAI_DB_URL:jdbc:mysql://127.0.0.1:3306/huacai_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${HUACAI_DB_USERNAME:root}
+    password: ${HUACAI_DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  jackson:
+    time-zone: Asia/Shanghai
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted_flag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+huacai:
+  jwt:
+    secret: ${HUACAI_JWT_SECRET}
+    expire-seconds: ${HUACAI_JWT_EXPIRE_SECONDS:7200}
+  file:
+    local-dir: ${HUACAI_FILE_LOCAL_DIR:${java.io.tmpdir}/huacai-files}

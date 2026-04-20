@@ -1,0 +1,76 @@
+-- 增量总览表：按公司主体维度维护年度增量台账
+CREATE TABLE IF NOT EXISTS `ana_increment_summary` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `company_name` VARCHAR(200) NOT NULL COMMENT '公司名称',
+  `business_address` VARCHAR(500) DEFAULT NULL COMMENT '经营地址',
+  `industry` VARCHAR(100) DEFAULT NULL COMMENT '行业',
+  `start_date` DATE DEFAULT NULL COMMENT '开始日期',
+  `jan_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '一月增量',
+  `feb_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '二月增量',
+  `mar_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '三月增量',
+  `apr_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '四月增量',
+  `may_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '五月增量',
+  `jun_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '六月增量',
+  `jul_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '七月增量',
+  `aug_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '八月增量',
+  `sep_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '九月增量',
+  `oct_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '十月增量',
+  `nov_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '十一月增量',
+  `dec_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '十二月增量',
+  `total_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '累计增量',
+  `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `created_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  PRIMARY KEY (`id`),
+  KEY `idx_ana_increment_summary_company` (`company_name`),
+  KEY `idx_ana_increment_summary_deleted` (`deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='增量总览表';
+
+-- 增量详情表：按客户+日期展示日汇总台账
+CREATE TABLE IF NOT EXISTS `ana_increment_detail` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `customer_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '客户ID',
+  `customer_name` VARCHAR(200) NOT NULL COMMENT '客户名称',
+  `increment_date` DATE NOT NULL COMMENT '增量日期',
+  `total_amount` DECIMAL(18,2) DEFAULT NULL COMMENT '增量总额',
+  `business_address` VARCHAR(500) DEFAULT NULL COMMENT '经营地址',
+  `industry` VARCHAR(100) DEFAULT NULL COMMENT '经营行业',
+  `daily_count` INT DEFAULT NULL COMMENT '当天共几笔',
+  `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `created_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  PRIMARY KEY (`id`),
+  KEY `idx_ana_increment_detail_customer` (`customer_id`),
+  KEY `idx_ana_increment_detail_date` (`increment_date`),
+  KEY `idx_ana_increment_detail_deleted` (`deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='增量详情表';
+
+-- 日增量明细表：某客户某天的逐笔增量记录
+CREATE TABLE IF NOT EXISTS `ana_daily_increment` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `detail_id` BIGINT UNSIGNED NOT NULL COMMENT '增量详情ID',
+  `customer_name` VARCHAR(200) NOT NULL COMMENT '客户名称',
+  `increment_date` DATE NOT NULL COMMENT '增量日期',
+  `increment_amount` DECIMAL(18,2) NOT NULL COMMENT '增量金额',
+  `channel_rate` DECIMAL(8,4) DEFAULT NULL COMMENT '渠道费率',
+  `channel_fee` DECIMAL(18,2) DEFAULT NULL COMMENT '渠道费',
+  `seq_no` INT DEFAULT NULL COMMENT '第几笔',
+  `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `created_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_flag` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  PRIMARY KEY (`id`),
+  KEY `idx_ana_daily_increment_detail` (`detail_id`),
+  KEY `idx_ana_daily_increment_deleted` (`deleted_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='日增量明细表';

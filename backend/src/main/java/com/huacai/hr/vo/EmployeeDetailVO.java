@@ -1,0 +1,49 @@
+package com.huacai.hr.vo;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public record EmployeeDetailVO(
+    Long id,
+    String employeeCode,
+    String realName,
+    String gender,
+    String idCardNo,
+    LocalDate birthday,
+    Integer age,
+    String nation,
+    String politicalStatus,
+    String hometown,
+    String maritalStatus,
+    String phone,
+    String email,
+    String graduateSchool,
+    String highestEducation,
+    LocalDate workStartDate,
+    String homeAddress,
+    String emergencyContact,
+    String emergencyContactPhone,
+    String bankCardNo,
+    String idPhotoUrl,
+    String employmentStatus,
+    String talentFlag,
+    Integer createSystemAccount,
+    String systemUsername,
+    Long orgId,
+    String orgName,
+    String jobTitle,
+    String remark,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt,
+    JobInfoVO jobInfo,
+    RemovalVO removal,
+    java.util.List<CertificateVO> certificates,
+    java.util.List<AssessmentVO> assessments,
+    java.util.List<GrowthVO> growthRecords,
+    java.util.List<FamilyVO> familyMembers,
+    java.util.List<ChangeVO> changeRecords,
+    java.util.List<ContractVO> contracts,
+    java.util.List<EmployeeSalaryVO> salaryInfo,
+    java.util.List<LeaveRecordVO> leaveRecords
+) {
+}
