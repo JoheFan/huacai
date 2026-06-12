@@ -220,7 +220,7 @@ class SystemManageServiceImplTest {
     void updateRolePermissionProfileRewritesTemplatePermissionsAndDataScopes() {
         SysRole role = enabledRole(3L, "STAFF", "普通用户", "NORMAL_USER", "SELF");
         SysPermissionItem customerPage = permissionItem(21L, "/customers", "PAGE", "customers");
-        SysPermissionItem loanPage = permissionItem(23L, "/loan-orders", "PAGE", "loan-orders");
+        SysPermissionItem loanPage = permissionItem(23L, "/loan-orders-self", "PAGE", "loan-orders-self");
         SysPermissionItem roleAssignButton = permissionItem(22L, "system.roles:assign-permission", "BUTTON", "system.roles");
 
         when(currentUserProvider.getCurrentUser()).thenReturn(Optional.of(superAdmin()));
@@ -231,9 +231,9 @@ class SystemManageServiceImplTest {
         SystemManageServiceImpl service = createService();
 
         service.updateRolePermissionProfile(3L, new RolePermissionProfileUpdateRequest(
-                List.of("/customers", "/loan-orders"),
+                List.of("/customers", "/loan-orders-self"),
                 List.of("system.roles:assign-permission"),
-                Map.of("customers", "ORG", "loan-orders", "SELF")
+                Map.of("customers", "ORG", "loan-orders-self", "SELF")
         ));
 
         ArgumentCaptor<SysRoleDataScope> dataScopeCaptor = ArgumentCaptor.forClass(SysRoleDataScope.class);
@@ -244,7 +244,7 @@ class SystemManageServiceImplTest {
                 .extracting(SysRoleDataScope::getModuleCode, SysRoleDataScope::getScopeType)
                 .containsExactlyInAnyOrder(
                         tuple("customers", "ORG"),
-                        tuple("loan-orders", "SELF")
+                        tuple("loan-orders-self", "SELF")
                 );
         assertThat(role.getDataScope()).isEqualTo("ORG");
     }

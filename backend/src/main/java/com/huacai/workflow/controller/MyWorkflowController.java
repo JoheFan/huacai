@@ -23,18 +23,18 @@ public class MyWorkflowController {
     }
 
     @GetMapping("/my-approvals/todos")
-    public PageResponse<MyApprovalTaskVO> pageTodos(MyApprovalPageQuery query) {
-        return myApprovalService.pageTodos(query);
+    public ApiResponse<PageResponse<MyApprovalTaskVO>> pageTodos(MyApprovalPageQuery query) {
+        return ApiResponse.success(myApprovalService.pageTodos(query));
     }
 
     @GetMapping("/my-approvals/initiated")
-    public PageResponse<MyApprovalTaskVO> pageInitiated(MyApprovalPageQuery query) {
-        return myApprovalService.pageInitiated(query);
+    public ApiResponse<PageResponse<MyApprovalTaskVO>> pageInitiated(MyApprovalPageQuery query) {
+        return ApiResponse.success(myApprovalService.pageInitiated(query));
     }
 
     @GetMapping("/my-approvals/processed")
-    public PageResponse<MyApprovalTaskVO> pageProcessed(MyApprovalPageQuery query) {
-        return myApprovalService.pageProcessed(query);
+    public ApiResponse<PageResponse<MyApprovalTaskVO>> pageProcessed(MyApprovalPageQuery query) {
+        return ApiResponse.success(myApprovalService.pageProcessed(query));
     }
 
     @PostMapping("/tasks/{taskId}/approve")

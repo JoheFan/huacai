@@ -335,8 +335,15 @@ public class OpportunityServiceImpl implements OpportunityService {
                 .collect(Collectors.toMap(
                         OppFollowRecord::getOpportunityId,
                         record -> record,
-                        (first, ignored) -> first
+                        this::pickLatestFollowRecord
                 ));
+    }
+
+    private OppFollowRecord pickLatestFollowRecord(OppFollowRecord first, OppFollowRecord second) {
+        Comparator<OppFollowRecord> byFollowTimeThenId = Comparator
+                .comparing(OppFollowRecord::getFollowTime, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(OppFollowRecord::getId, Comparator.nullsFirst(Comparator.naturalOrder()));
+        return byFollowTimeThenId.compare(first, second) >= 0 ? first : second;
     }
 
     private OpportunityVO toOpportunityVO(

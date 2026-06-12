@@ -104,6 +104,8 @@ public class ModuleAccessRegistry {
         BUSINESS_API_PREFIXES.put("/api/v1/customer-debts", "customer-debts");
         BUSINESS_API_PREFIXES.put("/api/v1/customers", "customers");
         BUSINESS_API_PREFIXES.put("/api/v1/opportunities", "opportunities");
+        BUSINESS_API_PREFIXES.put("/api/v1/assistant/opportunities", "opportunities");
+        BUSINESS_API_PREFIXES.put("/api/v1/assistant/actions", "opportunities");
         BUSINESS_API_PREFIXES.put("/api/v1/loan-orders", "loan-orders-self");
         BUSINESS_API_PREFIXES.put("/api/v1/repayments", "repayments");
         BUSINESS_API_PREFIXES.put("/api/v1/hr/employees", "hr.employees");
@@ -132,6 +134,8 @@ public class ModuleAccessRegistry {
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/customer-debts", "/customer-debts");
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/customers", "/customers");
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/opportunities", "/opportunities");
+        API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/assistant/opportunities", "/opportunities");
+        API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/assistant/actions", "/opportunities");
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/loan-orders", "/loan-orders-self");
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/repayments", "/repayments");
         API_REQUIRED_PAGE_PERMISSIONS.put("/api/v1/hr/employees", "/hr/employees");

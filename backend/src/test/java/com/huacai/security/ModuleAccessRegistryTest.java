@@ -24,7 +24,7 @@ class ModuleAccessRegistryTest {
     @Test
     void resolveRequiredPagePermissionMatchesConfiguredApiPrefix() {
         assertThat(registry.resolveRequiredPagePermission("/api/v1/customers")).contains("/customers");
-        assertThat(registry.resolveRequiredPagePermission("/api/v1/loan-orders/18")).contains("/loan-orders");
+        assertThat(registry.resolveRequiredPagePermission("/api/v1/loan-orders/18")).contains("/loan-orders-self");
         assertThat(registry.resolveRequiredPagePermission("/api/v1/system/users")).contains("/system/users");
     }
 

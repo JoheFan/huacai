@@ -14,7 +14,6 @@ import com.huacai.opportunity.mapper.OpportunityMapper;
 import com.huacai.opportunity.query.OpportunityPageQuery;
 import com.huacai.opportunity.vo.OpportunityVO;
 import com.huacai.security.CurrentUserProvider;
-import com.huacai.system.entity.SysUser;
 import com.huacai.system.mapper.UserMapper;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,14 +71,9 @@ class OpportunityServiceImplTest {
         latestRecord.setFollowerName("顾问B");
         latestRecord.setFollowContent("最新跟进记录");
 
-        SysUser follower = new SysUser();
-        follower.setId(102L);
-        follower.setRealName("顾问A");
-
         when(opportunityMapper.selectPage(any(), any())).thenReturn(page);
         when(customerMapper.selectBatchIds(any())).thenReturn(List.of(customer));
         when(followRecordMapper.selectList(any())).thenReturn(List.of(oldRecord, latestRecord));
-        when(userMapper.selectBatchIds(any())).thenReturn(List.of(follower));
 
         OpportunityServiceImpl service = new OpportunityServiceImpl(
                 opportunityMapper,
@@ -95,7 +89,7 @@ class OpportunityServiceImplTest {
         assertThat(record.companyName()).isEqualTo("华彩科技");
         assertThat(record.creditCode()).isEqualTo("91310000123456789X");
         assertThat(record.latestFollowTime()).isEqualTo(LocalDateTime.of(2026, 4, 15, 9, 30));
-        assertThat(record.latestFollowerName()).isEqualTo("顾问A");
+        assertThat(record.latestFollowerName()).isEqualTo("顾问B");
         assertThat(record.latestFollowContent()).isEqualTo("最新跟进记录");
     }
 }

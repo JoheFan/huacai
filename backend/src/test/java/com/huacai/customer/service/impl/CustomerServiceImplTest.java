@@ -278,6 +278,7 @@ class CustomerServiceImplTest {
         file.setId(id);
         file.setFileName(fileName);
         file.setFilePath("/tmp/" + fileName);
+        file.setUploaderId(99L);
         return file;
     }
 }

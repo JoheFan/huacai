@@ -1,5 +1,6 @@
 package com.huacai.workflow.controller;
 
+import com.huacai.common.model.ApiResponse;
 import com.huacai.common.model.PageResponse;
 import com.huacai.hr.dto.*;
 import com.huacai.hr.query.*;
@@ -21,80 +22,90 @@ public class WorkflowController {
     }
 
     @GetMapping("/transitions")
-    public PageResponse<TransitionApplyVO> pageTransitionApplies(TransitionApplyPageQuery query) {
-        return hrManageService.pageTransitionApplies(query);
+    public ApiResponse<PageResponse<TransitionApplyVO>> pageTransitionApplies(TransitionApplyPageQuery query) {
+        return ApiResponse.success(hrManageService.pageTransitionApplies(query));
     }
 
     @GetMapping("/transitions/{id}")
-    public TransitionApplyVO getTransitionApply(@PathVariable Long id) {
-        return hrManageService.getTransitionApply(id);
+    public ApiResponse<TransitionApplyVO> getTransitionApply(@PathVariable Long id) {
+        return ApiResponse.success(hrManageService.getTransitionApply(id));
     }
 
     @PostMapping("/transitions")
-    public void createTransitionApply(@Valid @RequestBody TransitionApplyCreateRequest request) {
+    public ApiResponse<Void> createTransitionApply(@Valid @RequestBody TransitionApplyCreateRequest request) {
         hrManageService.createTransitionApply(request);
+        return ApiResponse.success();
     }
 
     @PutMapping("/transitions/{id}")
-    public void updateTransitionApply(@PathVariable Long id, @RequestBody TransitionApplyUpdateRequest request) {
+    public ApiResponse<Void> updateTransitionApply(@PathVariable Long id, @RequestBody TransitionApplyUpdateRequest request) {
         hrManageService.updateTransitionApply(id, request);
+        return ApiResponse.success();
     }
 
     @PostMapping("/transitions/{id}/submit")
-    public void submitTransitionApply(@PathVariable Long id) {
+    public ApiResponse<Void> submitTransitionApply(@PathVariable Long id) {
         hrManageService.submitTransitionApply(id);
+        return ApiResponse.success();
     }
 
     @PostMapping("/transitions/{id}/approve")
-    public void approveTransitionApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
+    public ApiResponse<Void> approveTransitionApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
         hrManageService.approveTransitionApply(id, request);
+        return ApiResponse.success();
     }
 
     @PostMapping("/transitions/{id}/reject")
-    public void rejectTransitionApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
+    public ApiResponse<Void> rejectTransitionApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
         hrManageService.rejectTransitionApply(id, request);
+        return ApiResponse.success();
     }
 
     @GetMapping("/salary-adjusts")
-    public PageResponse<SalaryAdjustApplyVO> pageSalaryAdjustApplies(SalaryAdjustApplyPageQuery query) {
-        return hrManageService.pageSalaryAdjustApplies(query);
+    public ApiResponse<PageResponse<SalaryAdjustApplyVO>> pageSalaryAdjustApplies(SalaryAdjustApplyPageQuery query) {
+        return ApiResponse.success(hrManageService.pageSalaryAdjustApplies(query));
     }
 
     @GetMapping("/salary-adjusts/{id}")
-    public SalaryAdjustApplyVO getSalaryAdjustApply(@PathVariable Long id) {
-        return hrManageService.getSalaryAdjustApply(id);
+    public ApiResponse<SalaryAdjustApplyVO> getSalaryAdjustApply(@PathVariable Long id) {
+        return ApiResponse.success(hrManageService.getSalaryAdjustApply(id));
     }
 
     @PostMapping("/salary-adjusts")
-    public void createSalaryAdjustApply(@Valid @RequestBody SalaryAdjustApplyCreateRequest request) {
+    public ApiResponse<Void> createSalaryAdjustApply(@Valid @RequestBody SalaryAdjustApplyCreateRequest request) {
         hrManageService.createSalaryAdjustApply(request);
+        return ApiResponse.success();
     }
 
     @PutMapping("/salary-adjusts/{id}")
-    public void updateSalaryAdjustApply(@PathVariable Long id, @RequestBody SalaryAdjustApplyUpdateRequest request) {
+    public ApiResponse<Void> updateSalaryAdjustApply(@PathVariable Long id, @RequestBody SalaryAdjustApplyUpdateRequest request) {
         hrManageService.updateSalaryAdjustApply(id, request);
+        return ApiResponse.success();
     }
 
     @PostMapping("/salary-adjusts/{id}/submit")
-    public void submitSalaryAdjustApply(@PathVariable Long id) {
+    public ApiResponse<Void> submitSalaryAdjustApply(@PathVariable Long id) {
         hrManageService.submitSalaryAdjustApply(id);
+        return ApiResponse.success();
     }
 
     @PostMapping("/salary-adjusts/{id}/approve")
-    public void approveSalaryAdjustApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
+    public ApiResponse<Void> approveSalaryAdjustApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
         hrManageService.approveSalaryAdjustApply(id, request);
+        return ApiResponse.success();
     }
 
     @PostMapping("/salary-adjusts/{id}/reject")
-    public void rejectSalaryAdjustApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
+    public ApiResponse<Void> rejectSalaryAdjustApply(@PathVariable Long id, @Valid @RequestBody ApprovalOpinionRequest request) {
         hrManageService.rejectSalaryAdjustApply(id, request);
+        return ApiResponse.success();
     }
 
     @GetMapping("/approval-records")
-    public List<ApprovalRecordVO> getApprovalRecords(
+    public ApiResponse<List<ApprovalRecordVO>> getApprovalRecords(
             @RequestParam String bizType,
             @RequestParam Long bizId
     ) {
-        return hrManageService.getApprovalRecords(bizType, bizId);
+        return ApiResponse.success(hrManageService.getApprovalRecords(bizType, bizId));
     }
 }

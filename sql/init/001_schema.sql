@@ -614,7 +614,8 @@ VALUES
   (0, '/customer-risks', '风险评估', 'PAGE', 'customer-risks', '/customer-risks', 70, 'ENABLE'),
   (0, '/customer-debts', '负债登记', 'PAGE', 'customer-debts', '/customer-debts', 80, 'ENABLE'),
   (0, '/opportunities', '商机管理', 'PAGE', 'opportunities', '/opportunities', 90, 'ENABLE'),
-  (0, '/loan-orders', '借贷管理', 'PAGE', 'loan-orders', '/loan-orders', 100, 'ENABLE'),
+  (0, '/loan-orders-self', '借贷管理（自营）', 'PAGE', 'loan-orders-self', '/loan-orders-self', 100, 'ENABLE'),
+  (0, '/loan-orders-bank', '借贷管理（机构）', 'PAGE', 'loan-orders-bank', '/loan-orders-bank', 101, 'ENABLE'),
   (0, '/repayments', '还款明细', 'PAGE', 'repayments', '/repayments', 110, 'ENABLE'),
   (0, 'system.orgs:create', '新增组织', 'BUTTON', 'system.orgs', NULL, 210, 'ENABLE'),
   (0, 'system.orgs:update', '编辑组织', 'BUTTON', 'system.orgs', NULL, 220, 'ENABLE'),
@@ -645,7 +646,8 @@ INNER JOIN `sys_permission_item` p ON p.permission_code IN (
   '/customer-risks',
   '/customer-debts',
   '/opportunities',
-  '/loan-orders',
+  '/loan-orders-self',
+  '/loan-orders-bank',
   '/repayments',
   'system.orgs:create',
   'system.orgs:update',
@@ -687,7 +689,8 @@ INNER JOIN (
   SELECT 'customer-risks', 'ALL' UNION ALL
   SELECT 'customer-debts', 'ALL' UNION ALL
   SELECT 'opportunities', 'ALL' UNION ALL
-  SELECT 'loan-orders', 'ALL' UNION ALL
+  SELECT 'loan-orders-self', 'ALL' UNION ALL
+  SELECT 'loan-orders-bank', 'ALL' UNION ALL
   SELECT 'repayments', 'ALL'
 ) t ON 1 = 1
 WHERE r.role_code = 'ADMIN';
@@ -700,7 +703,8 @@ INNER JOIN (
   SELECT 'customer-risks', 'ORG' UNION ALL
   SELECT 'customer-debts', 'ORG' UNION ALL
   SELECT 'opportunities', 'ORG' UNION ALL
-  SELECT 'loan-orders', 'ORG' UNION ALL
+  SELECT 'loan-orders-self', 'ORG' UNION ALL
+  SELECT 'loan-orders-bank', 'ORG' UNION ALL
   SELECT 'repayments', 'ORG'
 ) t ON 1 = 1
 WHERE r.role_code = 'DEPT_ADMIN';
@@ -713,7 +717,8 @@ INNER JOIN (
   SELECT 'customer-risks', 'SELF' UNION ALL
   SELECT 'customer-debts', 'SELF' UNION ALL
   SELECT 'opportunities', 'SELF' UNION ALL
-  SELECT 'loan-orders', 'SELF' UNION ALL
+  SELECT 'loan-orders-self', 'SELF' UNION ALL
+  SELECT 'loan-orders-bank', 'SELF' UNION ALL
   SELECT 'repayments', 'SELF'
 ) t ON 1 = 1
 WHERE r.role_code = 'STAFF';

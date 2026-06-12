@@ -22,8 +22,8 @@ public class FinanceWorkflowController {
     }
 
     @GetMapping("/reimbursements")
-    public PageResponse<ReimbursementVO> pageReimbursements(ReimbursementPageQuery query) {
-        return reimbursementService.pageReimbursements(query);
+    public ApiResponse<PageResponse<ReimbursementVO>> pageReimbursements(ReimbursementPageQuery query) {
+        return ApiResponse.success(reimbursementService.pageReimbursements(query));
     }
 
     @GetMapping("/reimbursements/{id}")
