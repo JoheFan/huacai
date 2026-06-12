@@ -117,6 +117,10 @@ export const canAccessPath = (path: string, user: CurrentUserInfo | null | undef
   if (path === '/' || path === '/login') {
     return true
   }
+  // Staff users can access /welcome regardless of menu configuration
+  if (!isAdminUser(user) && getEffectivePagePermissions(user).includes(path)) {
+    return true
+  }
   const item = findMenuItem(path)
   if (!item) {
     return false

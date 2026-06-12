@@ -374,6 +374,20 @@ onMounted(async () => {
 <template>
   <section class="page-shell">
     <section class="card">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">系统管理</span>
+          <h2 class="page-intro__title">用户管理</h2>
+          <p class="page-intro__desc">统一维护系统用户、账号状态和角色归属，并支持按用户维度细化页面、按钮和数据权限。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" @click="openCreate">新增用户</el-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
       <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input v-model="filters.keyword" placeholder="账号 / 姓名 / 手机号" clearable />
@@ -389,7 +403,6 @@ onMounted(async () => {
         <div class="list-toolbar__actions">
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button plain @click="handleReset">重置</el-button>
-          <el-button type="primary" plain @click="openCreate">新增用户</el-button>
         </div>
       </div>
     </section>
@@ -638,29 +651,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters,
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters {
-  flex: 1 1 680px;
-}
-
-.list-toolbar__filters :deep(.el-input),
-.list-toolbar__filters :deep(.el-select) {
-  width: 180px;
-}
-
 .list-pagination {
   display: flex;
   align-items: center;

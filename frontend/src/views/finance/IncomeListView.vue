@@ -175,32 +175,46 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>收入管理</h2>
-        <div class="toolbar">
-          <el-button type="primary" :icon="Plus" @click="openCreate">新增</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">财务管理</span>
+          <h2 class="page-intro__title">收入管理</h2>
+          <p class="page-intro__desc">统一登记公司收入记录，支持按收入类型和关键字筛选，便于核对金额、转入方和业务日期。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" :icon="Plus" @click="openCreate">新增收入</el-button>
         </div>
       </div>
+    </section>
 
-      <div class="filter-bar">
-        <el-input
-          v-model="filters.keyword"
-          placeholder="收入名称"
-          style="width: 200px"
-          clearable
-          @keyup.enter="handleSearch"
-        />
-        <el-select v-model="filters.incomeType" placeholder="收入类型" style="width: 140px" clearable>
-          <el-option label="服务费" value="SERVICE" />
-          <el-option label="咨询费" value="CONSULT" />
-          <el-option label="代理费" value="AGENCY" />
-          <el-option label="其他" value="OTHER" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-        <el-button :icon="Refresh" @click="fetchList">刷新</el-button>
+    <section class="card">
+      <div class="card__section list-toolbar">
+        <div class="list-toolbar__filters">
+          <el-input
+            v-model="filters.keyword"
+            placeholder="收入名称"
+            clearable
+            @keyup.enter="handleSearch"
+          />
+          <el-select v-model="filters.incomeType" placeholder="收入类型" clearable>
+            <el-option label="服务费" value="SERVICE" />
+            <el-option label="咨询费" value="CONSULT" />
+            <el-option label="代理费" value="AGENCY" />
+            <el-option label="其他" value="OTHER" />
+          </el-select>
+        </div>
+        <div class="list-toolbar__actions">
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button plain @click="handleReset">重置</el-button>
+          <el-button plain :icon="Refresh" @click="fetchList">刷新</el-button>
+        </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table v-loading="loading" :data="rows" stripe border>
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="incomeName" label="收入名称" min-width="140" />
@@ -229,6 +243,7 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -239,6 +254,7 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
 
     <el-drawer v-model="drawerVisible" :title="drawerTitle" size="500px" @close="drawerVisible = false">
@@ -276,10 +292,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-shell { padding: 16px; }
-.card { background: #fff; border-radius: 8px; padding: 16px; }
-.card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.card__header h2 { font-size: 18px; font-weight: 600; margin: 0; }
-.toolbar { display: flex; gap: 8px; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
 </style>

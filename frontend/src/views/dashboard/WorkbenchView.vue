@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Plus, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchWorkbenchOverview, type WorkbenchMetric, type WorkbenchRecord, type WorkbenchReminder, type WorkbenchTodo } from '../../api/workbench'
+import IconSymbol from '../../components/IconSymbol.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -17,12 +17,35 @@ const focusRows = ref<WorkbenchRecord[]>([])
 const todoItems = ref<WorkbenchTodo[]>([])
 const reminderItems = ref<WorkbenchReminder[]>([])
 
-const quickEntries = [
-  { label: '新增客户', path: '/customers' },
-  { label: '借贷管理', path: '/loan-orders' },
-  { label: '收入管理', path: '/finance/incomes' },
-  { label: '系统用户', path: '/system/users' },
-]
+const metricIconMap: Record<string, string> = {
+  客户总数: 'users',
+  运行中借贷单: 'receipt',
+  今日还款登记: 'calendar',
+  资料待补客户: 'mail',
+}
+
+const resolveMetricIcon = (card: WorkbenchMetric) => metricIconMap[card.title] || 'chart'
+
+const metricArtMap: Record<string, string> = {
+  客户总数: 'users',
+  运行中借贷单: 'receipt',
+  今日还款登记: 'pieChart',
+  资料待补客户: 'receipt',
+}
+
+const resolveMetricArt = (card: WorkbenchMetric) => metricArtMap[card.title] || 'document'
+
+const todoIconMap: Record<string, string> = {
+  检查运行中借贷单余额: 'receipt',
+  核对今日还款登记: 'checkCalendar',
+  补齐客户关键资料: 'mail',
+}
+
+const reminderIconMap: Record<string, string> = {
+  danger: 'warningBell',
+  warning: 'warningBell',
+  success: 'checkCircle',
+}
 
 const loadOverview = async () => {
   loading.value = true
@@ -53,494 +76,750 @@ const goTo = (path: string) => {
 }
 
 onMounted(loadOverview)
+
+const priorityClass = (p: string) => ({
+  'is-high': p === '高',
+  'is-medium': p === '中',
+  'is-low': p === '低',
+})
+
+const resolveTodoIcon = (item: WorkbenchTodo) => todoIconMap[item.title] || 'document'
+const resolveReminderIcon = (item: WorkbenchReminder) => reminderIconMap[item.tone] || 'warningBell'
 </script>
 
 <template>
-  <section class="page-shell">
-    <header class="workbench-toolbar">
-      <div class="workbench-heading__actions">
-        <el-button type="primary" @click="goTo('/customers')">
-          <el-icon><Plus /></el-icon>
-          新增客户
-        </el-button>
-        <el-button plain @click="goTo('/loan-orders')">登记借贷</el-button>
-        <el-button text @click="resetFilters">
-          <el-icon><RefreshRight /></el-icon>
-          重置视图
-        </el-button>
-      </div>
-    </header>
+  <div class="workbench-root">
+    <div class="workbench-hero" aria-hidden="true"></div>
 
-    <section class="workbench-metrics">
-      <article
-        v-for="card in metricCards"
-        :key="card.title"
-        class="metric-card card"
-        :class="{ 'metric-card--emphasized': card.emphasized }"
-      >
-        <div class="card__section">
-          <div class="metric-card__top">
-            <span class="metric-card__title">{{ card.title }}</span>
-            <span class="metric-card__helper">{{ card.helper }}</span>
+        <!-- 操作栏 -->
+        <header class="topbar">
+          <div class="topbar__actions">
+            <el-button type="primary" size="large" @click="goTo('/customers')">
+              <IconSymbol name="plus" :size="17" />
+              新增客户
+            </el-button>
+            <el-button size="large" plain @click="goTo('/loan-orders')">登记借贷</el-button>
+            <el-button size="large" text @click="resetFilters">
+              <IconSymbol name="refresh" :size="17" />
+              重置视图
+            </el-button>
           </div>
-          <strong class="metric-card__value">{{ card.value }}</strong>
-        </div>
-      </article>
-    </section>
+        </header>
 
-    <section class="workbench-content">
-      <article class="card workbench-main" v-loading="loading">
-        <div class="card__section">
-          <div class="workbench-section__header">
-            <h3 class="section-title">最近业务记录</h3>
-          </div>
+        <!-- 指标卡区域 -->
+        <section class="stats-grid">
+          <article
+            v-for="card in metricCards"
+            :key="card.title"
+            class="metric-card"
+            :class="{ 'metric-card--active': card.emphasized }"
+          >
+            <div class="metric-card__inner">
+              <div class="metric-card__top">
+                <span class="metric-card__icon">
+                  <IconSymbol :name="resolveMetricIcon(card)" :size="18" />
+                </span>
+                <div class="metric-card__heading">
+                  <span class="metric-card__title">{{ card.title }}</span>
+                  <span class="metric-card__helper" v-if="card.helper">{{ card.helper }}</span>
+                </div>
+              </div>
+              <strong class="metric-card__value">{{ card.value }}</strong>
+            </div>
+            <!-- 装饰 radial glow -->
+            <div class="metric-card__glow" aria-hidden="true"></div>
+            <!-- 右下角业务装饰图标 -->
+            <div class="metric-card__art" aria-hidden="true">
+              <IconSymbol :name="resolveMetricArt(card)" :size="56" />
+            </div>
+          </article>
+        </section>
 
-          <div class="workbench-filter">
-            <div class="workbench-filter__core">
-              <el-input v-model="filters.keyword" placeholder="客户名称 / 客户ID" clearable />
-              <div class="workbench-filter__actions">
-                <el-button type="primary" @click="handleSearch">查询</el-button>
-                <el-button plain @click="resetFilters">重置</el-button>
+        <!-- 主内容区 -->
+        <section class="content-grid">
+          <!-- 左侧：最近业务记录 -->
+          <div class="content-main card" v-loading="loading">
+            <div class="card__section">
+              <div class="section-header section-header--accent">
+                <h3 class="section-title">最近业务记录</h3>
+              </div>
+
+              <!-- 筛选区 -->
+              <div class="filter-panel">
+                <div class="filter-panel__row">
+                  <el-input
+                    v-model="filters.keyword"
+                    placeholder="客户名称 / 客户ID"
+                    clearable
+                    size="large"
+                    class="filter-panel__input"
+                  >
+                    <template #prefix>
+                      <span class="filter-panel__search">
+                        <IconSymbol name="search" :size="16" />
+                      </span>
+                    </template>
+                  </el-input>
+                  <div class="filter-panel__btns">
+                    <el-button type="primary" size="large" @click="handleSearch">查询</el-button>
+                    <el-button size="large" plain @click="resetFilters">重置</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 表格 -->
+              <div class="table-wrap">
+                <el-table
+                  :data="focusRows"
+                  class="data-table"
+                  table-layout="fixed"
+                  stripe
+                >
+                  <el-table-column prop="customerName" label="客户名称" min-width="180" />
+                  <el-table-column prop="recordType" label="记录类型" min-width="120" />
+                  <el-table-column prop="relationInfo" label="关联信息" min-width="140" />
+                  <el-table-column prop="actionDate" label="最近日期" min-width="120" />
+                  <el-table-column prop="status" label="当前状态" min-width="120" />
+                  <el-table-column label="操作" width="96">
+                    <template #default="{ row }">
+                      <el-button text type="primary" @click="goTo(row.routePath)">打开</el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+
+              <!-- 分页信息 -->
+              <div class="table-footer">
+                <span class="table-footer__count">{{ focusRows.length }} 条记录</span>
               </div>
             </div>
           </div>
 
-          <div class="workbench-table-wrap">
-            <el-table :data="focusRows" class="workbench-table" table-layout="fixed">
-              <el-table-column prop="customerName" label="客户名称" min-width="180" />
-              <el-table-column prop="recordType" label="记录类型" min-width="120" />
-              <el-table-column prop="relationInfo" label="关联信息" min-width="140" />
-              <el-table-column prop="actionDate" label="最近日期" min-width="120" />
-              <el-table-column prop="status" label="当前状态" min-width="120" />
-              <el-table-column prop="priority" label="优先级" min-width="90">
-                <template #default="{ row }">
-                  <span
-                    class="priority-tag"
-                    :class="{
-                      'is-high': row.priority === '高',
-                      'is-medium': row.priority === '中',
-                      'is-low': row.priority === '低',
-                    }"
-                  >
-                    {{ row.priority }}
-                  </span>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="140" fixed="right">
-                <template #default="{ row }">
-                  <div class="table-actions">
-                    <el-button text type="primary" @click="goTo(row.routePath)">打开</el-button>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
+          <!-- 右侧：侧边栏 -->
+          <aside class="content-side">
 
-          <div class="workbench-pagination">
-            <span class="workbench-pagination__count">{{ focusRows.length }} 条记录</span>
-          </div>
-        </div>
-      </article>
-
-      <aside class="workbench-side">
-        <article class="card workbench-side__card">
-          <div class="card__section">
-            <div class="workbench-side__header">
-              <h3 class="section-title">今日待办</h3>
-              <span class="workbench-pill workbench-pill--highlight">{{ todoItems.length }} 项</span>
-            </div>
-            <ul class="side-list">
-              <li v-for="item in todoItems" :key="item.title" class="side-list__item">
-                <div>
-                  <strong>{{ item.title }}</strong>
-                  <p>{{ item.deadline }}</p>
+            <!-- 今日待办 -->
+            <div class="card side-card">
+              <div class="card__section">
+                <div class="section-header section-header--accent">
+                  <h3 class="section-title">今日待办</h3>
+                  <span class="side-pill" v-if="todoItems.length">{{ todoItems.length }} 项</span>
                 </div>
-                <span
-                  class="side-list__tag"
-                  :class="{
-                    'is-high': item.level === '高',
-                    'is-medium': item.level === '中',
-                    'is-low': item.level === '低',
-                  }"
-                >
-                  {{ item.level }}优先
-                </span>
-              </li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="card workbench-side__card">
-          <div class="card__section">
-            <div class="workbench-side__header">
-              <h3 class="section-title">运行提醒</h3>
+                <ul class="todo-list">
+                  <li v-for="item in todoItems" :key="item.title" class="todo-item">
+                    <span class="todo-item__icon">
+                      <IconSymbol :name="resolveTodoIcon(item)" :size="18" />
+                    </span>
+                    <div class="todo-item__body">
+                      <strong class="todo-item__title">{{ item.title }}</strong>
+                      <span class="todo-item__deadline">{{ item.deadline }}</span>
+                    </div>
+                    <span class="todo-item__level" :class="priorityClass(item.level)">
+                      {{ item.level }}优先
+                    </span>
+                  </li>
+                  <li v-if="todoItems.length === 0" class="todo-empty">暂无待办事项</li>
+                </ul>
+              </div>
             </div>
-            <ul class="reminder-list">
-              <li v-for="item in reminderItems" :key="item.title" class="reminder-list__item">
-                <span class="reminder-list__dot" :class="`is-${item.tone}`"></span>
-                <div class="reminder-list__content">
-                  <strong>{{ item.title }}</strong>
-                  <p>{{ item.tag }}</p>
+
+            <!-- 运行提醒 -->
+            <div class="card side-card">
+              <div class="card__section">
+                <div class="section-header section-header--accent">
+                  <h3 class="section-title">运行提醒</h3>
                 </div>
-              </li>
-            </ul>
-          </div>
-        </article>
+                <ul class="reminder-list">
+                  <li v-for="item in reminderItems" :key="item.title" class="reminder-item">
+                    <span class="reminder-icon" :class="`is-${item.tone}`">
+                      <IconSymbol :name="resolveReminderIcon(item)" :size="18" />
+                    </span>
+                    <div class="reminder-item__body">
+                      <strong>{{ item.title }}</strong>
+                      <span class="reminder-item__tag">{{ item.tag }}</span>
+                    </div>
+                  </li>
+                  <li v-if="reminderItems.length === 0" class="reminder-empty">暂无提醒</li>
+                </ul>
+              </div>
+            </div>
 
-        <article class="card workbench-side__card">
-          <div class="card__section">
-            <div class="workbench-side__header">
-              <h3 class="section-title">快捷入口</h3>
-            </div>
-            <div class="quick-grid">
-              <el-button
-                v-for="entry in quickEntries"
-                :key="entry.label"
-                plain
-                size="small"
-                class="quick-grid__button"
-                @click="goTo(entry.path)"
-              >
-                {{ entry.label }}
-              </el-button>
-            </div>
-          </div>
-        </article>
-      </aside>
-    </section>
-  </section>
+          </aside>
+        </section>
+  </div>
 </template>
 
 <style scoped>
-.workbench-toolbar {
+/* ── 根层 ── */
+.workbench-root {
+  position: relative;
+  min-height: 100%;
+  box-sizing: border-box;
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.workbench-heading__actions {
+.workbench-hero {
+  position: absolute;
+  top: -56px;
+  right: -20px;
+  width: min(920px, 76vw);
+  height: 240px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 84%, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0) 18%),
+    linear-gradient(152deg, transparent 0 42%, rgba(255, 255, 255, 0.55) 42.4%, transparent 43%),
+    linear-gradient(164deg, transparent 0 51%, rgba(255, 255, 255, 0.45) 51.35%, transparent 52%),
+    linear-gradient(173deg, transparent 0 61%, rgba(255, 255, 255, 0.38) 61.3%, transparent 61.8%);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+/* ── 操作栏 ── */
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 1;
+}
+
+.topbar__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.workbench-metrics {
+.topbar__actions :deep(.el-button) {
+  min-width: 132px;
+  height: 46px;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.topbar__actions :deep(.el-button--default.is-plain) {
+  border-color: rgba(213, 225, 248, 0.96);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.topbar__actions :deep(.el-button.is-text) {
+  min-width: auto;
+  padding: 0 4px;
+  background: transparent;
+  color: #5c6f97;
+}
+
+/* ── 指标卡网格 ── */
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .metric-card {
-  min-width: 0;
+  position: relative;
+  display: flex;
+  border-radius: 22px;
+  border: 1px solid rgba(210, 226, 252, 0.98);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+  box-shadow: 0 14px 34px rgba(91, 126, 193, 0.08);
+  padding: 22px 22px 20px;
+  min-height: 138px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.metric-card--emphasized {
-  background: var(--hc-primary-soft);
-  border-color: rgba(59, 130, 246, 0.2);
+.metric-card:hover {
+  box-shadow: 0 14px 32px rgba(88, 123, 191, 0.12);
+}
+
+.metric-card--active {
+  background: linear-gradient(180deg, #f8fbff, #edf4ff);
+  border-color: #c7d9ff;
+}
+
+.metric-card__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .metric-card__top {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 12px;
+}
+
+.metric-card__icon {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f5f9ff, #edf4ff);
+  border: 1px solid rgba(203, 221, 255, 0.92);
+  color: #4a85ff;
+  flex-shrink: 0;
+}
+
+.metric-card__heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
 }
 
 .metric-card__title {
+  display: block;
+  font-weight: 700;
   font-size: 15px;
-  font-weight: 600;
-  color: var(--hc-text);
+  line-height: 1.35;
+  color: #122D5F;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .metric-card__helper {
-  color: var(--hc-primary);
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 18px;
+  color: #4A85FF;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .metric-card__value {
   display: block;
-  margin-top: 14px;
-  font-size: 33px;
+  margin-top: auto;
+  padding-top: 26px;
+  font-size: 48px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
+  color: #1a4fba;
 }
 
-.workbench-content {
+.metric-card__glow {
+  position: absolute;
+  left: 18px;
+  bottom: -18px;
+  width: 128px;
+  height: 72px;
+  background: radial-gradient(circle, rgba(124, 170, 255, 0.12), rgba(124, 170, 255, 0) 72%);
+  pointer-events: none;
+}
+
+.metric-card__art {
+  position: absolute;
+  right: 14px;
+  bottom: 8px;
+  opacity: 0.12;
+  pointer-events: none;
+  color: #8db6ff;
+}
+
+/* ── 内容网格 ── */
+.content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 0.92fr);
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.82fr);
   gap: 16px;
+  align-items: start;
+  position: relative;
+  z-index: 1;
 }
 
-.workbench-main {
-  min-width: 0;
-  border-radius: var(--hc-panel-radius);
-}
-
-.workbench-section__header,
-.workbench-side__header {
+/* ── Section Header ── */
+.section-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.workbench-pill {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 11px;
+.section-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #122D5F;
+}
+
+.section-header--accent {
+  position: relative;
+  padding-left: 22px;
+}
+
+.section-header--accent::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 24px;
   border-radius: 999px;
-  border: 1px solid var(--hc-border);
-  background: var(--hc-surface-secondary);
-  color: var(--hc-text-soft);
-  font-size: 13px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, #7eb0ff, #356bf5);
+  box-shadow: 0 6px 16px rgba(53, 107, 245, 0.18);
 }
 
-.workbench-pill--highlight {
-  border-color: rgba(59, 130, 246, 0.18);
-  background: var(--hc-primary-soft);
-  color: var(--hc-primary);
+/* ── 主内容卡片 ── */
+.content-main {
+  border-radius: 24px;
+  min-width: 0;
 }
 
-.workbench-filter {
+/* ── 筛选区 ── */
+.filter-panel {
   margin-top: 18px;
-  padding: 14px;
-  border: 1px solid var(--hc-border);
-  border-radius: var(--hc-filter-radius);
-  background: var(--hc-surface-secondary);
+  padding: 16px 18px;
+  border: 1px solid #dbe8ff;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f8fbff, #f5f9ff);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.workbench-filter__core,
-.workbench-filter__extra {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.filter-panel__row {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-.workbench-filter__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.filter-panel__input {
+  flex: 1;
 }
 
-.workbench-filter__extra {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed rgba(148, 163, 184, 0.35);
-}
-
-.workbench-table-wrap {
-  margin-top: 16px;
-  overflow-x: auto;
-}
-
-:deep(.workbench-table) {
-  min-width: 760px;
-}
-
-:deep(.workbench-table .el-table__header th) {
-  background: var(--hc-surface-secondary);
-  color: var(--hc-text-soft);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-:deep(.workbench-table .el-table__cell) {
-  padding: 8px 0;
-  font-size: 14px;
-}
-
-:deep(.workbench-table .el-table__row:hover > td.el-table__cell) {
-  background: rgba(59, 130, 246, 0.04);
-}
-
-.priority-tag,
-.side-list__tag {
+.filter-panel__search {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 64px;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: 999px;
+  color: #7d93bc;
+}
+
+.filter-panel__btns {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.filter-panel__btns :deep(.el-button) {
+  min-width: 88px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+/* ── 表格 ── */
+.table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid #edf3ff;
+}
+
+:deep(.data-table) {
+  min-width: 760px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: none;
+}
+
+:deep(.data-table .el-table__header th) {
+  background: #f8fbff;
+  color: #7085AD;
   font-size: 13px;
+  font-weight: 700;
+  padding: 12px 18px;
+  border-bottom: 1px solid #dbe8ff;
 }
 
-.priority-tag.is-high,
-.side-list__tag.is-high {
-  background: rgba(217, 72, 95, 0.12);
-  color: var(--hc-danger);
+:deep(.data-table .el-table__cell) {
+  padding: 12px 18px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #122D5F;
+  border-bottom: 1px solid #edf3ff;
 }
 
-.priority-tag.is-medium,
-.side-list__tag.is-medium {
-  background: rgba(217, 119, 6, 0.12);
-  color: var(--hc-warning);
-}
-
-.priority-tag.is-low,
-.side-list__tag.is-low {
-  background: rgba(15, 118, 110, 0.12);
-  color: var(--hc-success);
-}
-
-.table-actions {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.workbench-pagination {
+/* ── 表格 Footer ── */
+.table-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
   margin-top: 14px;
 }
 
-.workbench-pagination__count {
-  color: var(--hc-text-soft);
+.table-footer__count {
+  color: #7085AD;
   font-size: 13px;
-  line-height: 1.6;
 }
 
-.workbench-side {
+/* ── 侧边栏 ── */
+.content-side {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.workbench-side__card {
-  border-radius: var(--hc-panel-radius);
+.side-card {
+  border-radius: 24px;
 }
 
-.side-list,
-.reminder-list {
+.side-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 133, 255, 0.18);
+  background: rgba(74, 133, 255, 0.08);
+  color: #4A85FF;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── 待办列表 ── */
+.todo-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 16px 0 0;
+  gap: 10px;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.side-list__item {
+.todo-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--hc-border);
-  border-radius: 14px;
-  background: var(--hc-surface-secondary);
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #dbe8ff;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f9fbff, #f6faff);
 }
 
-.side-list__item strong,
-.reminder-list__content strong {
-  display: block;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.side-list__item p,
-.reminder-list__content p {
-  margin: 6px 0 0;
-  color: var(--hc-text-soft);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.reminder-list__item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 0;
-}
-
-.reminder-list__dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
-  border-radius: 999px;
+.todo-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #77a7ff, #4b7df8);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(53, 107, 245, 0.18);
   flex-shrink: 0;
 }
 
-.reminder-list__dot.is-danger {
-  background: var(--hc-danger);
+.todo-item__body {
+  flex: 1;
+  min-width: 0;
 }
 
-.reminder-list__dot.is-warning {
-  background: var(--hc-warning);
+.todo-item__title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #122D5F;
+  line-height: 1.45;
 }
 
-.reminder-list__dot.is-success {
-  background: var(--hc-success);
+.todo-item__deadline {
+  display: block;
+  margin-top: 3px;
+  color: #7085AD;
+  font-size: 13px;
 }
 
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
+.todo-item__level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.quick-grid__button {
-  justify-content: flex-start;
-  width: 100%;
+.todo-item__level.is-high {
+  background: rgba(239, 115, 134, 0.1);
+  color: #EF7386;
 }
 
+.todo-item__level.is-medium {
+  background: rgba(219, 125, 20, 0.1);
+  color: #DB7D14;
+}
+
+.todo-item__level.is-low {
+  background: rgba(24, 166, 157, 0.1);
+  color: #18A69D;
+}
+
+.todo-empty,
+.reminder-empty {
+  color: #95A7C4;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ── 提醒列表 ── */
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.reminder-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.reminder-icon.is-danger {
+  color: #ff8a35;
+  background: rgba(255, 138, 53, 0.12);
+}
+
+.reminder-icon.is-warning {
+  color: #2f6cff;
+  background: rgba(47, 108, 255, 0.1);
+}
+
+.reminder-icon.is-success {
+  color: #18a69d;
+  background: rgba(24, 166, 157, 0.1);
+}
+
+.reminder-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-item__body strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #122D5F;
+  line-height: 1.4;
+}
+
+.reminder-item__tag {
+  display: block;
+  margin-top: 3px;
+  color: #7085AD;
+  font-size: 13px;
+}
+
+/* ── 响应式 ── */
 @media (max-width: 1280px) {
-  .workbench-metrics {
+  .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .workbench-content {
-    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 1024px) {
-  .workbench-filter__core {
-    grid-template-columns: 1fr 1fr;
+  .content-grid {
+    grid-template-columns: 1fr;
   }
 
-  .workbench-pagination {
-    flex-direction: column;
-    align-items: stretch;
+  .content-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .filter-panel__row {
+    flex-wrap: wrap;
+  }
+
+  .filter-panel__input {
+    min-width: 200px;
   }
 }
 
 @media (max-width: 720px) {
-  .workbench-heading__actions {
+  .main-surface {
+    padding: 16px 14px;
+    border-radius: 24px;
+    gap: 14px;
+  }
+
+  .topbar__actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .workbench-heading__actions :deep(.el-button) {
-    width: 100%;
-  }
-
-  .workbench-section__header,
-  .workbench-side__header,
-  .side-list__item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .workbench-metrics,
-  .workbench-filter__core,
-  .quick-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .workbench-filter__actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
-  .workbench-filter__actions :deep(.el-button) {
+  .topbar__actions :deep(.el-button) {
     width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .metric-card {
+    min-height: 148px;
+    padding: 16px 16px 16px;
+    border-radius: 20px;
+  }
+
+  .metric-card__top {
+    grid-template-columns: 34px minmax(0, 1fr);
+    max-width: calc(100% - 54px);
+  }
+
+  .metric-card__title {
+    font-size: 16px;
+  }
+
+  .metric-card__heading {
+    gap: 5px;
+  }
+
+  .metric-card__value {
+    font-size: 34px;
+    padding-top: 18px;
+  }
+
+  .content-side {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

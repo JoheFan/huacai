@@ -136,8 +136,4 @@ const formatAuditStatus = (status: string | undefined) => {
   align-items: center;
   gap: 10px;
 }
-:deep(.el-form-item__label) {
-  font-weight: 700;
-  color: var(--hc-text);
-}
 </style>

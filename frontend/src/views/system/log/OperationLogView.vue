@@ -88,8 +88,8 @@ onMounted(fetchList)
       <div class="card__section page-intro">
         <div class="page-intro__copy">
           <span class="page-intro__eyebrow">系统管理</span>
-          <h2>管理日志</h2>
-          <p>记录系统关键操作，支持按模块、操作类型、关键词和时间范围筛选。</p>
+          <h2 class="page-intro__title">管理日志</h2>
+          <p class="page-intro__desc">记录系统关键操作，支持按模块、操作类型、关键词和时间范围筛选。</p>
         </div>
       </div>
     </section>
@@ -172,84 +172,3 @@ onMounted(fetchList)
     </section>
   </section>
 </template>
-
-<style scoped>
-.page-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-intro__copy {
-  max-width: 760px;
-}
-
-.page-intro__eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  color: var(--hc-primary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-.page-intro h2 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
-}
-
-.page-intro p {
-  margin: 10px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
-
-.list-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.list-toolbar__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  flex: 1;
-}
-
-.list-toolbar__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.list-pagination__meta {
-  color: var(--hc-text-soft);
-  font-size: 13px;
-}
-
-@media (max-width: 1180px) {
-  .page-intro,
-  .list-toolbar,
-  .list-pagination {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .page-intro__actions,
-  .list-toolbar__actions {
-    justify-content: flex-start;
-  }
-}
-</style>

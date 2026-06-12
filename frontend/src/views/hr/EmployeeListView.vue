@@ -99,40 +99,54 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>员工档案</h2>
-        <div class="toolbar">
-          <el-button type="primary" :icon="Plus" @click="openCreate">新增</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">人事管理</span>
+          <h2 class="page-intro__title">员工档案</h2>
+          <p class="page-intro__desc">统一维护员工基础信息、任职状态和组织归属，支持按在职范围切换查看，便于快速进入员工详情。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" :icon="Plus" @click="openCreate">新增员工</el-button>
         </div>
       </div>
+    </section>
 
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="在职" name="ONBOARD" />
-        <el-tab-pane label="全部" name="ALL" />
-      </el-tabs>
+    <section class="card">
+      <div class="card__section page-stack">
+        <el-tabs v-model="activeTab" class="page-tabs" @tab-change="handleTabChange">
+          <el-tab-pane label="在职" name="ONBOARD" />
+          <el-tab-pane label="全部" name="ALL" />
+        </el-tabs>
 
-      <div class="filter-bar">
-        <el-input
-          v-model="filters.keyword"
-          placeholder="搜索姓名、员工编号"
-          style="width: 240px"
-          clearable
-          @clear="handleReset"
-          @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <Search />
-          </template>
-        </el-input>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-        <div class="filter-bar__right">
-          <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
-          <el-button :icon="Upload" :disabled="true" title="功能开发中">导入</el-button>
-          <el-button :icon="Download" :disabled="true" title="功能开发中">导出</el-button>
+        <div class="list-toolbar">
+          <div class="list-toolbar__filters">
+            <el-input
+              v-model="filters.keyword"
+              placeholder="搜索姓名、员工编号"
+              clearable
+              @clear="handleReset"
+              @keyup.enter="handleSearch"
+            >
+              <template #prefix>
+                <Search />
+              </template>
+            </el-input>
+          </div>
+          <div class="list-toolbar__actions">
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button plain @click="handleReset">重置</el-button>
+            <el-button plain :icon="Refresh" @click="handleRefresh">刷新</el-button>
+            <el-button plain :icon="Upload" :disabled="true" title="功能开发中">导入</el-button>
+            <el-button plain :icon="Download" :disabled="true" title="功能开发中">导出</el-button>
+          </div>
         </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table
         v-loading="loading"
         :data="rows"
@@ -176,6 +190,7 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -186,49 +201,10 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
   </section>
 </template>
 
 <style scoped>
-.page-shell {
-  padding: 16px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.card__header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.toolbar {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  align-items: center;
-}
-
-.filter-bar__right {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
 </style>

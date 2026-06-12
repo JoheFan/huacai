@@ -250,74 +250,15 @@ export default { name: 'IncrementDailyDetailView' }
 </template>
 
 <style scoped>
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__info {
-  display: flex;
-  gap: 24px;
-  font-size: 14px;
-  color: var(--hc-text-secondary);
-}
-
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-}
-
 .list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-.drawer-shell {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.form-grid__full {
-  grid-column: 1 / -1;
-}
-
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
+  margin-right: 0;
 }
 
 @media (max-width: 960px) {
-  .list-toolbar {
+  .list-pagination {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .drawer-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .drawer-actions :deep(.el-button) {
-    width: 100%;
   }
 }
 </style>

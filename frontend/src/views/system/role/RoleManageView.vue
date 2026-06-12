@@ -278,6 +278,20 @@ onMounted(fetchList)
 <template>
   <section class="page-shell">
     <section class="card">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">系统管理</span>
+          <h2 class="page-intro__title">角色管理</h2>
+          <p class="page-intro__desc">统一维护角色身份、默认权限和数据范围策略，支持按角色维度查看状态、编辑信息和配置权限。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" @click="openCreate">新增角色</el-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
       <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input v-model="filters.keyword" placeholder="角色编码 / 角色名称" clearable />
@@ -289,7 +303,6 @@ onMounted(fetchList)
         <div class="list-toolbar__actions">
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button plain @click="handleReset">重置</el-button>
-          <el-button type="primary" plain @click="openCreate">新增角色</el-button>
         </div>
       </div>
     </section>

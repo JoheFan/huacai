@@ -227,7 +227,21 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-        <div class="card__section list-toolbar">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">经营管理 / 商机管理</span>
+          <h2 class="page-intro__title">商机管理</h2>
+          <p class="page-intro__desc">统一维护商机阶段、优先级和最新跟进摘要。支持按客户和状态筛选，点击跟进可进入对应商机的跟进记录页。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" @click="openCreate">新增商机</el-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input v-model="filters.keyword" placeholder="客户ID / 客户名称 / 联系方式" clearable />
           <el-select v-model="filters.stageCode" placeholder="商机阶段" clearable>
@@ -246,62 +260,63 @@ onMounted(() => {
         <div class="list-toolbar__actions">
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button plain @click="handleReset">重置</el-button>
-          <el-button type="primary" plain @click="openCreate">新增商机</el-button>
         </div>
       </div>
     </section>
 
     <section class="card">
       <div class="card__section">
-        <el-table v-loading="loading" :data="rows" table-layout="fixed">
-          <el-table-column prop="customerNo" label="客户ID" min-width="130" />
-          <el-table-column prop="customerName" label="客户名称" min-width="120" />
-          <el-table-column prop="mobile" label="联系方式" min-width="130" />
-          <el-table-column prop="companyName" label="企业名称" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="creditCode" label="统一社会信用代码" min-width="190" show-overflow-tooltip />
-          <el-table-column prop="priorityLevel" label="优先级" min-width="80">
-            <template #default="{ row }">
-              <el-tag :type="row.priorityLevel === 'HIGH' ? 'danger' : row.priorityLevel === 'LOW' ? 'info' : 'warning'">
-                {{ getPriorityLabel(row.priorityLevel) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="latestFollowTime" label="最近一次跟进时间" min-width="170">
-            <template #default="{ row }">
-              {{ getLatestFollowSummary(row).timeText }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="latestFollowerName" label="跟进人" min-width="100">
-            <template #default="{ row }">
-              {{ getLatestFollowSummary(row).followerText }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="latestFollowContent" label="跟进记录" min-width="220" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ getLatestFollowSummary(row).contentText }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="estimatedAmount" label="预计申请额度" min-width="130">
-            <template #default="{ row }">
-              {{ formatAmount(row.estimatedAmount) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
-          <el-table-column label="操作" width="260" fixed="right">
-            <template #default="{ row }">
-              <el-button text type="primary" @click="openEdit(row)">编辑</el-button>
-              <el-button text type="primary" @click="openFollowRecords(row)">跟进记录</el-button>
-              <el-button
-                text
-                :type="row.status === 'OPEN' ? 'warning' : 'success'"
-                @click="handleStatusChange(row, row.status === 'OPEN' ? 'CLOSED' : 'OPEN')"
-              >
-                {{ row.status === 'OPEN' ? '关闭' : '重新打开' }}
-              </el-button>
-              <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="table-wrap">
+          <el-table v-loading="loading" :data="rows" table-layout="fixed">
+            <el-table-column prop="customerNo" label="客户ID" min-width="100" />
+            <el-table-column prop="customerName" label="客户名称" min-width="100" />
+            <el-table-column prop="mobile" label="联系方式" min-width="110" />
+            <el-table-column prop="companyName" label="企业名称" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="creditCode" label="统一社会信用代码" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="priorityLevel" label="优先级" min-width="80">
+              <template #default="{ row }">
+                <el-tag :type="row.priorityLevel === 'HIGH' ? 'danger' : row.priorityLevel === 'LOW' ? 'info' : 'warning'">
+                  {{ getPriorityLabel(row.priorityLevel) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="latestFollowTime" label="最近跟进时间" min-width="130">
+              <template #default="{ row }">
+                {{ getLatestFollowSummary(row).timeText }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="latestFollowerName" label="跟进人" min-width="80">
+              <template #default="{ row }">
+                {{ getLatestFollowSummary(row).followerText }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="latestFollowContent" label="跟进记录" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">
+                {{ getLatestFollowSummary(row).contentText }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="estimatedAmount" label="预计额度" min-width="100">
+              <template #default="{ row }">
+                {{ formatAmount(row.estimatedAmount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
+          <el-table-column label="操作" width="200" fixed="right">
+              <template #default="{ row }">
+                <el-button text type="primary" @click="openEdit(row)">编辑</el-button>
+                <el-button text type="primary" @click="openFollowRecords(row)">跟进</el-button>
+                <el-button
+                  text
+                  :type="row.status === 'OPEN' ? 'warning' : 'success'"
+                  @click="handleStatusChange(row, row.status === 'OPEN' ? 'CLOSED' : 'OPEN')"
+                >
+                  {{ row.status === 'OPEN' ? '关闭' : '重开' }}
+                </el-button>
+                <el-button text type="danger" @click="handleDelete(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
 
         <div class="list-pagination">
           <el-pagination
@@ -392,58 +407,43 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters,
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters {
-  flex: 1 1 680px;
-}
-
 .list-toolbar__filters :deep(.el-input),
 .list-toolbar__filters :deep(.el-select) {
-  width: 180px;
+  width: 160px;
 }
 
 .list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
+  justify-content: flex-end;
+  margin-right: 0;
 }
 
 .drawer-shell {
-  display: flex;
   height: 100%;
-  flex-direction: column;
+  gap: 16px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
+@media (max-width: 960px) {
+  .list-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.form-grid__full {
-  grid-column: 1 / -1;
-}
+  .list-toolbar__filters :deep(.el-input),
+  .list-toolbar__filters :deep(.el-select) {
+    width: 100%;
+  }
 
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .drawer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .drawer-actions :deep(.el-button) {
+    width: 100%;
+  }
 }
 </style>

@@ -198,13 +198,13 @@ onMounted(loadDetail)
 <template>
   <section class="page-shell">
     <section v-loading="loading" class="card">
-      <div class="card__section archive-header">
-        <div class="archive-header__copy">
-          <span class="archive-header__eyebrow">客户管理 / 档案页</span>
-          <h2>{{ pageTitle }}</h2>
-          <p>一次提交客户基本信息、风险评估、负债登记和合同管理。风险评估与负债登记独立列表页新增的数据会同步回显到这里。</p>
+      <div class="card__section detail-header">
+        <div class="detail-header__copy">
+          <span class="detail-header__eyebrow">客户管理 / 档案页</span>
+          <h2 class="detail-header__title">{{ pageTitle }}</h2>
+          <p class="detail-header__desc">一次提交客户基本信息、风险评估、负债登记和合同管理。风险评估与负债登记独立列表页新增的数据会同步回显到这里。</p>
         </div>
-        <div class="archive-header__actions">
+        <div class="detail-header__actions">
           <el-button @click="router.push('/customers')">返回列表</el-button>
           <el-button type="primary" :loading="submitting" @click="handleSubmit">提交档案</el-button>
         </div>
@@ -217,14 +217,14 @@ onMounted(loadDetail)
       </div>
     </section>
 
-    <section ref="basicSectionRef" class="card archive-section">
-      <div class="card__section section-head">
+    <section ref="basicSectionRef" class="card form-section">
+      <div class="card__section form-section__header">
         <div>
-          <div class="section-head__title-row">
-            <h3 class="section-title">基本信息</h3>
+          <div class="form-section__title-row">
+            <h3 class="form-section__title">基本信息</h3>
             <el-tag size="small" effect="plain">主档</el-tag>
           </div>
-          <p class="section-head__description">先录入客户身份、企业主体、银行与推荐人信息，客户资料原件支持多附件上传。</p>
+          <p class="form-section__desc">先录入客户身份、企业主体、银行与推荐人信息，客户资料原件支持多附件上传。</p>
         </div>
       </div>
       <CustomerArchiveBasicSection :form="form" @update-status="openStatusUpdateDialog">
@@ -236,28 +236,30 @@ onMounted(loadDetail)
       </CustomerArchiveBasicSection>
     </section>
 
-    <section ref="riskSectionRef" class="card archive-section">
+    <section ref="riskSectionRef" class="card form-section">
       <CustomerArchiveRiskSection :form="form" />
     </section>
 
-    <section ref="debtSectionRef" class="card archive-section">
+    <section ref="debtSectionRef" class="card form-section">
       <CustomerArchiveDebtSection :form="form" />
     </section>
 
-    <section ref="contractSectionRef" class="card archive-section">
+    <section ref="contractSectionRef" class="card form-section">
       <CustomerArchiveContractSection :form="form" :contract-attachments="contractAttachments" />
     </section>
 
-    <section ref="statusSectionRef" class="card archive-section">
-      <div class="card__section section-head">
+    <section ref="statusSectionRef" class="card form-section">
+      <div class="card__section form-section__header">
         <div>
-          <div class="section-head__title-row">
-            <h3 class="section-title">审核状态历史</h3>
+          <div class="form-section__title-row">
+            <h3 class="form-section__title">审核状态历史</h3>
             <el-tag size="small" effect="plain">{{ statusLogs.length }} 条</el-tag>
           </div>
-          <p class="section-head__description">审核状态变更记录，每次变更都会生成一条历史。</p>
+          <p class="form-section__desc">审核状态变更记录，每次变更都会生成一条历史。</p>
         </div>
-        <el-button type="primary" plain @click="openStatusUpdateDialog">变更审核状态</el-button>
+        <div class="form-section__actions">
+          <el-button type="primary" plain @click="openStatusUpdateDialog">变更审核状态</el-button>
+        </div>
       </div>
       <div class="card__section">
         <el-table :data="statusLogs" table-layout="fixed">
@@ -296,87 +298,5 @@ onMounted(loadDetail)
 </template>
 
 <style scoped>
-.archive-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.archive-header__copy {
-  max-width: 840px;
-}
-.archive-header__eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  color: var(--hc-primary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-.archive-header h2 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
-}
-.archive-header p {
-  margin: 10px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
-.archive-header__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.archive-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 0;
-}
-.archive-nav__button {
-  min-height: 38px;
-}
-.archive-nav__count {
-  margin-left: 6px;
-  color: var(--hc-text-soft);
-  font-size: 12px;
-}
-.archive-section {
-  scroll-margin-top: 18px;
-}
-.section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.section-head__title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.section-title {
-  margin: 0;
-}
-.section-head__description {
-  margin: 8px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
-.empty-tip {
-  text-align: center;
-  color: var(--hc-text-soft);
-  padding: 24px 0;
-}
-@media (max-width: 1180px) {
-  .archive-header, .section-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .archive-header__actions {
-    justify-content: flex-start;
-  }
-}
+/* 仅保留需要局部处理的样式，大部分已上移到全局 */
 </style>

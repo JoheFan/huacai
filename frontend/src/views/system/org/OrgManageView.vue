@@ -135,9 +135,15 @@ onMounted(loadTree)
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__section list-toolbar">
-        <div class="list-toolbar__actions">
-          <el-button type="primary" plain @click="openCreate()">新增根组织</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">系统管理</span>
+          <h2 class="page-intro__title">组织管理</h2>
+          <p class="page-intro__desc">统一维护公司与部门组织树，支持新增根组织、子组织以及组织状态管理，便于用户和人事数据归属。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" @click="openCreate()">新增根组织</el-button>
         </div>
       </div>
     </section>

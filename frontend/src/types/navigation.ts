@@ -19,5 +19,6 @@ export interface MenuItem extends ModuleRouteMeta {
 
 export interface MenuGroup {
   title: string
+  icon?: string
   items: MenuItem[]
 }

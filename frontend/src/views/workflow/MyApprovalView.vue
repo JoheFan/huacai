@@ -158,29 +158,43 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>我的审批</h2>
-      </div>
-
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="待我审批" name="todos" />
-        <el-tab-pane label="我发起的" name="initiated" />
-        <el-tab-pane label="我已审批" name="processed" />
-      </el-tabs>
-
-      <div class="filter-bar">
-        <el-select v-model="filters.bizType" placeholder="业务类型" style="width: 140px" clearable>
-          <el-option label="转正申请" value="TRANSITION" />
-          <el-option label="调薪申请" value="SALARY_ADJUST" />
-          <el-option label="报销申请" value="REIMBURSEMENT" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-        <div class="filter-bar__right">
-          <el-button :icon="Refresh" @click="fetchList">刷新</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">我的审批</span>
+          <h2 class="page-intro__title">审批中心</h2>
+          <p class="page-intro__desc">集中查看待我审批、我发起和我已审批的流程任务，支持按业务类型筛选并进入审批详情处理。</p>
         </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section page-stack">
+        <el-tabs v-model="activeTab" class="page-tabs" @tab-change="handleTabChange">
+          <el-tab-pane label="待我审批" name="todos" />
+          <el-tab-pane label="我发起的" name="initiated" />
+          <el-tab-pane label="我已审批" name="processed" />
+        </el-tabs>
+
+        <div class="list-toolbar">
+          <div class="list-toolbar__filters">
+            <el-select v-model="filters.bizType" placeholder="业务类型" clearable>
+              <el-option label="转正申请" value="TRANSITION" />
+              <el-option label="调薪申请" value="SALARY_ADJUST" />
+              <el-option label="报销申请" value="REIMBURSEMENT" />
+            </el-select>
+          </div>
+          <div class="list-toolbar__actions">
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button plain @click="handleReset">重置</el-button>
+            <el-button plain :icon="Refresh" @click="fetchList">刷新</el-button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table v-loading="loading" :data="rows" stripe border style="width: 100%">
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="bizType" label="业务类型" width="120">
@@ -208,6 +222,7 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -218,6 +233,7 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
 
     <!-- 详情抽屉 -->
@@ -281,12 +297,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-shell { padding: 16px; }
-.card { background: #fff; border-radius: 8px; padding: 16px; }
-.card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.card__header h2 { font-size: 18px; font-weight: 600; margin: 0; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
-.filter-bar__right { margin-left: auto; }
 .section { margin-bottom: 24px; }
 .section-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
 .approval-actions { display: flex; gap: 12px; margin-top: 12px; }

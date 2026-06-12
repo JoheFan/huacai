@@ -697,12 +697,17 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="detail-header">
-        <div class="header-left">
-          <el-button :icon="ArrowLeft" @click="goBack">返回</el-button>
-          <h2>{{ isNew ? '新增员工' : (isEdit ? '编辑员工' : '员工详情') }}</h2>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">人事管理 / 员工档案</span>
+          <div class="detail-heading">
+            <el-button :icon="ArrowLeft" plain @click="goBack">返回</el-button>
+            <h2 class="page-intro__title">{{ isNew ? '新增员工' : (isEdit ? '编辑员工' : '员工详情') }}</h2>
+          </div>
+          <p class="page-intro__desc">统一维护员工档案、任职信息和相关从表记录。新增、编辑和查看共用同一套详情页结构。</p>
         </div>
-        <div class="header-actions">
+
+        <div class="page-intro__actions">
           <template v-if="!isEdit && !isNew">
             <el-button type="primary" @click="isEdit = true">编辑</el-button>
           </template>
@@ -713,7 +718,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-tabs v-model="activeTab">
+      <div class="card__section page-stack">
+      <el-tabs v-model="activeTab" class="page-tabs">
         <!-- 档案信息 -->
         <el-tab-pane label="档案信息" name="basic">
           <el-form :model="form" label-width="120px" :disabled="!isEdit">
@@ -1075,6 +1081,7 @@ onMounted(() => {
           </el-table>
         </el-tab-pane>
       </el-tabs>
+      </div>
     </section>
 
     <!-- Certificate Dialog -->
@@ -1308,39 +1315,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-shell {
-  padding: 16px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.header-left {
+.detail-heading {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.header-left h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
+.detail-heading :deep(.el-button) {
+  flex-shrink: 0;
 }
 
 .form-section {

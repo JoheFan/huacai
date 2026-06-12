@@ -326,48 +326,62 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>报销申请</h2>
-        <div class="toolbar">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">工作流 / 财务审批</span>
+          <h2 class="page-intro__title">报销申请</h2>
+          <p class="page-intro__desc">统一管理报销流程，支持按申请范围和流程状态筛选，并可直接进入详情、编辑和提交流程。</p>
+        </div>
+
+        <div class="page-intro__actions">
           <el-button type="primary" :icon="Plus" @click="openCreate">新增报销</el-button>
         </div>
       </div>
+    </section>
 
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="我创建的" name="my" />
-        <el-tab-pane label="全部" name="all" />
-      </el-tabs>
+    <section class="card">
+      <div class="card__section page-stack">
+        <el-tabs v-model="activeTab" class="page-tabs" @tab-change="handleTabChange">
+          <el-tab-pane label="我创建的" name="my" />
+          <el-tab-pane label="全部" name="all" />
+        </el-tabs>
 
-      <div class="filter-bar">
-        <el-input
-          v-model="filters.keyword"
-          placeholder="搜索申请人/单号"
-          style="width: 200px"
-          clearable
-          @clear="handleReset"
-          @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <Search />
-          </template>
-        </el-input>
-        <el-select v-model="filters.processStatus" placeholder="流程状态" style="width: 140px" clearable>
-          <el-option label="草稿" value="DRAFT" />
-          <el-option label="待部门审核" value="PENDING_DEPT" />
-          <el-option label="待人事审核" value="PENDING_HR" />
-          <el-option label="待分管领导" value="PENDING_LEADER" />
-          <el-option label="待财务办理" value="PENDING_FINANCE" />
-          <el-option label="已通过" value="APPROVED" />
-          <el-option label="已驳回" value="REJECTED" />
-          <el-option label="已撤回" value="WITHDRAWN" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-        <div class="filter-bar__right">
-          <el-button :icon="Refresh" @click="fetchList">刷新</el-button>
+        <div class="list-toolbar">
+          <div class="list-toolbar__filters">
+            <el-input
+              v-model="filters.keyword"
+              placeholder="搜索申请人/单号"
+              clearable
+              @clear="handleReset"
+              @keyup.enter="handleSearch"
+            >
+              <template #prefix>
+                <Search />
+              </template>
+            </el-input>
+            <el-select v-model="filters.processStatus" placeholder="流程状态" clearable>
+              <el-option label="草稿" value="DRAFT" />
+              <el-option label="待部门审核" value="PENDING_DEPT" />
+              <el-option label="待人事审核" value="PENDING_HR" />
+              <el-option label="待分管领导" value="PENDING_LEADER" />
+              <el-option label="待财务办理" value="PENDING_FINANCE" />
+              <el-option label="已通过" value="APPROVED" />
+              <el-option label="已驳回" value="REJECTED" />
+              <el-option label="已撤回" value="WITHDRAWN" />
+            </el-select>
+          </div>
+          <div class="list-toolbar__actions">
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button plain @click="handleReset">重置</el-button>
+            <el-button plain :icon="Refresh" @click="fetchList">刷新</el-button>
+          </div>
         </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table v-loading="loading" :data="rows" stripe border style="width: 100%">
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="applyNo" label="申请单号" width="180" />
@@ -422,6 +436,7 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -432,6 +447,7 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
 
     <!-- 新建/编辑对话框 -->
@@ -595,13 +611,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-shell { padding: 16px; }
-.card { background: #fff; border-radius: 8px; padding: 16px; }
-.card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.card__header h2 { font-size: 18px; font-weight: 600; margin: 0; }
-.toolbar { display: flex; gap: 8px; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
-.filter-bar__right { margin-left: auto; }
 .section { margin-bottom: 24px; }
 .section-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
 .reason-box { padding: 12px; background: #f5f7fa; border-radius: 4px; white-space: pre-wrap; min-height: 60px; }

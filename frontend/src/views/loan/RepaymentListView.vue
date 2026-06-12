@@ -246,6 +246,19 @@ onMounted(async () => {
 <template>
   <section class="page-shell">
     <section class="card">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">借贷管理</span>
+          <h2 class="page-intro__title">还款管理</h2>
+          <p class="page-intro__desc">统一登记和查询还款记录，支持按客户、借贷单和资金来源筛选。指定客户维度时自动显示该客户的汇总信息。</p>
+        </div>
+        <div class="page-intro__actions">
+          <el-button type="primary" plain @click="openCreate">登记还款</el-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
       <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input v-model="filters.keyword" placeholder="客户名称 / 客户编号 / 还款途径" clearable />
@@ -288,7 +301,8 @@ onMounted(async () => {
           </div>
         </div>
 
-        <el-table v-loading="loading" :data="rows" table-layout="fixed">
+        <div class="table-wrap">
+          <el-table v-loading="loading" :data="rows" table-layout="fixed">
           <el-table-column label="序号" width="80">
             <template #default="{ $index }">
               {{ (filters.pageNum - 1) * filters.pageSize + $index + 1 }}
@@ -334,6 +348,7 @@ onMounted(async () => {
             </template>
           </el-table-column>
         </el-table>
+        </div>
 
         <div class="list-pagination">
           <el-pagination
@@ -404,15 +419,15 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-.list-toolbar__filters,
+.list-toolbar__filters {
+  flex: 1 1 540px;
+}
+
 .list-toolbar__actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-.list-toolbar__filters {
-  flex: 1 1 540px;
+  align-items: center;
 }
 
 .list-toolbar__filters :deep(.el-input),
@@ -420,92 +435,17 @@ onMounted(async () => {
   width: 220px;
 }
 
-.section-caption {
-  margin-bottom: 12px;
-  color: var(--hc-text-soft);
-  font-size: 13px;
-}
-
-.summary-panel {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+.drawer-alert {
   margin-bottom: 16px;
 }
 
-.summary-panel__item {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--hc-surface-secondary);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+:deep(.el-form-item__label) {
+  font-weight: 700;
+  color: var(--hc-text);
 }
 
-.summary-panel__label {
-  color: var(--hc-text-soft);
-  font-size: 13px;
-}
-
-.list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-.drawer-shell {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.form-grid__full {
-  grid-column: 1 / -1;
-}
-
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
-}
-
-@media (max-width: 960px) {
-  .list-pagination,
-  .list-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .summary-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .list-toolbar__filters :deep(.el-input),
-  .list-toolbar__filters :deep(.el-select) {
-    width: 100%;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .drawer-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .drawer-actions :deep(.el-button) {
-    width: 100%;
-  }
+:deep(.el-table th .cell) {
+  font-weight: 700;
+  color: var(--hc-text);
 }
 </style>

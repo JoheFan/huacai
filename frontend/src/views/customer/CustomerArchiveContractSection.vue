@@ -77,92 +77,75 @@ const removeContractRecord = async (index: number) => {
 </script>
 
 <template>
-  <div class="card__section">
-    <div class="section-head">
+  <div class="form-section card__section">
+    <div class="form-section__header">
       <div>
-        <div class="section-head__title-row">
-          <h3 class="section-title">合同管理</h3>
+        <div class="form-section__title-row">
+          <h3 class="form-section__title">合同管理</h3>
           <el-tag size="small" effect="plain">{{ form.contractRecords.length }} 条</el-tag>
         </div>
-        <p class="section-head__description">合同记录仍挂在客户档案页内，不单独出左侧菜单。每条合同支持多个附件。</p>
+        <p class="form-section__desc">合同记录仍挂在客户档案页内，不单独出左侧菜单。每条合同支持多个附件。</p>
       </div>
       <el-button plain @click="appendContractSection">新增一条</el-button>
     </div>
-    <el-table :data="form.contractRecords" table-layout="fixed">
-      <el-table-column type="index" label="序号" width="70" />
-      <el-table-column label="客户名称" min-width="130">
-        <template #default="{ row }">
-          <el-input v-model="row.customerName" placeholder="请输入客户名称" />
-        </template>
-      </el-table-column>
-      <el-table-column label="公司名称" min-width="160">
-        <template #default="{ row }">
-          <el-input v-model="row.companyName" placeholder="请输入公司名称" />
-        </template>
-      </el-table-column>
-      <el-table-column label="统一社会信用代码" min-width="180">
-        <template #default="{ row }">
-          <el-input v-model="row.creditCode" placeholder="请输入统一社会信用代码" />
-        </template>
-      </el-table-column>
-      <el-table-column label="合同编号" min-width="140">
-        <template #default="{ row }">
-          <el-input v-model="row.contractNo" placeholder="请输入合同编号" />
-        </template>
-      </el-table-column>
-      <el-table-column label="合同名称" min-width="160">
-        <template #default="{ row }">
-          <el-input v-model="row.contractName" placeholder="请输入合同名称" />
-        </template>
-      </el-table-column>
-      <el-table-column label="合同附件" min-width="180">
-        <template #default="{ $index }">
-          <el-upload
-            :http-request="handleContractUpload($index)"
-            :file-list="toUploadFiles(contractAttachments[$index] ?? [])"
-            :on-remove="handleContractRemove($index)"
-            multiple
-          >
-            <el-button plain>上传附件</el-button>
-          </el-upload>
-        </template>
-      </el-table-column>
-      <el-table-column label="备注" min-width="150">
-        <template #default="{ row }">
-          <el-input v-model="row.remark" placeholder="请输入备注" />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="100" fixed="right">
-        <template #default="{ $index }">
-          <el-button text type="danger" @click="removeContractRecord($index)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="record-section">
+      <el-table :data="form.contractRecords" table-layout="fixed">
+        <el-table-column type="index" label="序号" width="70" />
+        <el-table-column label="客户名称" min-width="130">
+          <template #default="{ row }">
+            <el-input v-model="row.customerName" placeholder="请输入客户名称" />
+          </template>
+        </el-table-column>
+        <el-table-column label="公司名称" min-width="160">
+          <template #default="{ row }">
+            <el-input v-model="row.companyName" placeholder="请输入公司名称" />
+          </template>
+        </el-table-column>
+        <el-table-column label="统一社会信用代码" min-width="180">
+          <template #default="{ row }">
+            <el-input v-model="row.creditCode" placeholder="请输入统一社会信用代码" />
+          </template>
+        </el-table-column>
+        <el-table-column label="合同编号" min-width="140">
+          <template #default="{ row }">
+            <el-input v-model="row.contractNo" placeholder="请输入合同编号" />
+          </template>
+        </el-table-column>
+        <el-table-column label="合同名称" min-width="160">
+          <template #default="{ row }">
+            <el-input v-model="row.contractName" placeholder="请输入合同名称" />
+          </template>
+        </el-table-column>
+        <el-table-column label="合同附件" min-width="180">
+          <template #default="{ $index }">
+            <el-upload
+              :http-request="handleContractUpload($index)"
+              :file-list="toUploadFiles(contractAttachments[$index] ?? [])"
+              :on-remove="handleContractRemove($index)"
+              multiple
+            >
+              <el-button plain>上传附件</el-button>
+            </el-upload>
+          </template>
+        </el-table-column>
+        <el-table-column label="备注" min-width="150">
+          <template #default="{ row }">
+            <el-input v-model="row.remark" placeholder="请输入备注" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right">
+          <template #default="{ $index }">
+            <el-button text type="danger" @click="removeContractRecord($index)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.section-head__title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.section-title {
-  margin: 0;
-}
-.section-head__description {
-  margin: 8px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
 :deep(.el-table th .cell) {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--hc-text);
 }
 </style>

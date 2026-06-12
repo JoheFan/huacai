@@ -235,8 +235,8 @@ onMounted(async () => {
       <div class="card__section page-intro">
         <div class="page-intro__copy">
           <span class="page-intro__eyebrow">客户管理 / 风险评估</span>
-          <h2>风险评估</h2>
-          <p>按记录维度维护客户风险评估。可按客户筛选，点击客户名称直接回到客户档案，列表与档案页共用同一份数据。</p>
+          <h2 class="page-intro__title">风险评估</h2>
+          <p class="page-intro__desc">按记录维度维护客户风险评估。可按客户筛选，点击客户名称直接回到客户档案，列表与档案页共用同一份数据。</p>
         </div>
 
         <div class="page-intro__actions">
@@ -298,13 +298,16 @@ onMounted(async () => {
 
     <section class="card">
       <div class="card__section">
-        <el-table v-loading="loading" :data="rows" table-layout="fixed">
-          <el-table-column prop="customerNo" label="客户ID" min-width="120" />
+        <div class="table-wrap">
+          <el-table v-loading="loading" :data="rows" table-layout="fixed">
           <el-table-column label="客户名称" min-width="128" fixed="left">
             <template #default="{ row }">
-              <el-button text type="primary" @click="openArchive(row.customerId)">{{ row.customerName }}</el-button>
+              <el-tooltip :content="row.customerName" placement="top">
+                <el-button text type="primary" @click="openArchive(row.customerId)">{{ row.customerName }}</el-button>
+              </el-tooltip>
             </template>
           </el-table-column>
+          <el-table-column prop="customerNo" label="客户ID" min-width="120" />
           <el-table-column prop="mobile" label="联系电话" min-width="130" />
           <el-table-column prop="companyName" label="公司名称" min-width="170" show-overflow-tooltip />
           <el-table-column prop="creditCode" label="统一社会信用代码" min-width="190" show-overflow-tooltip />
@@ -352,6 +355,7 @@ onMounted(async () => {
             </template>
           </el-table-column>
         </el-table>
+        </div>
 
         <div class="list-pagination">
           <span class="list-pagination__meta">共 {{ total }} 条</span>
@@ -421,61 +425,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.page-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-intro__copy {
-  max-width: 760px;
-}
-
-.page-intro__eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  color: var(--hc-primary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-.page-intro h2 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
-}
-
-.page-intro p {
-  margin: 10px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
-
-.page-intro__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.action-dropdown__trigger {
-  min-width: 88px;
-}
-
-.action-dropdown__trigger--text {
-  min-width: auto;
-  padding: 0;
-}
-
-.list-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .list-toolbar__filters {
   display: grid;
   flex: 1;
@@ -488,23 +437,6 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-:deep(.action-dropdown__danger) {
-  color: var(--el-color-danger);
-}
-
-.list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.list-pagination__meta {
-  color: var(--hc-text-soft);
-  font-size: 13px;
 }
 
 .drawer-alert {
@@ -522,18 +454,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 1180px) {
-  .page-intro,
-  .list-toolbar,
-  .list-pagination {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .page-intro__actions,
-  .list-toolbar__actions {
-    justify-content: flex-start;
-  }
-
   .list-toolbar__filters {
     grid-template-columns: 1fr;
   }

@@ -30,20 +30,22 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="profile-header">
-        <div class="avatar">
-          <el-avatar :size="80" />
-        </div>
-        <div class="info">
-          <h2>{{ detail?.realName || '-' }}</h2>
-          <p>{{ detail?.orgName || '-' }} | {{ detail?.jobTitle || '-' }}</p>
-          <p>{{ detail?.phone || '-' }} | {{ detail?.email || '-' }}</p>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy profile-intro">
+          <div class="profile-intro__avatar">
+            <el-avatar :size="80" />
+          </div>
+          <div class="profile-intro__body">
+            <span class="page-intro__eyebrow">人事管理 / 我的信息</span>
+            <h2 class="page-intro__title">{{ detail?.realName || '-' }}</h2>
+            <p class="page-intro__desc">{{ detail?.orgName || '-' }} | {{ detail?.jobTitle || '-' }}</p>
+            <p class="profile-intro__meta">{{ detail?.phone || '-' }} | {{ detail?.email || '-' }}</p>
+          </div>
         </div>
       </div>
 
-      <el-divider />
-
-      <el-tabs>
+      <div class="card__section page-stack">
+      <el-tabs class="page-tabs">
         <el-tab-pane label="基本信息" name="basic">
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="姓名">{{ detail?.realName || '-' }}</el-descriptions-item>
@@ -133,42 +135,29 @@ onMounted(() => {
           </el-table>
         </el-tab-pane>
       </el-tabs>
+      </div>
     </section>
   </section>
 </template>
 
 <style scoped>
-.page-shell {
-  padding: 16px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-}
-
-.profile-header {
+.profile-intro {
   display: flex;
   align-items: center;
   gap: 24px;
 }
 
-.avatar {
+.profile-intro__avatar {
   flex-shrink: 0;
 }
 
-.info {
+.profile-intro__body {
   flex: 1;
 }
 
-.info h2 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-}
-
-.info p {
-  margin: 4px 0;
-  color: #666;
+.profile-intro__meta {
+  margin: 6px 0 0;
+  color: var(--hc-text-muted);
+  font-size: var(--hc-font-helper);
 }
 </style>

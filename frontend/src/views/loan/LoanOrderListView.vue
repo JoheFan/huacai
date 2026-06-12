@@ -321,6 +321,19 @@ onMounted(async () => {
 <template>
   <section class="page-shell">
     <section class="card">
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">借贷管理</span>
+          <h2 class="page-intro__title">借贷单汇总</h2>
+          <p class="page-intro__desc">按客户维度汇总借贷情况，支持按资金来源和状态筛选。点击「借贷单明细」展开单笔记录，点击「还款」跳转对应还款页。</p>
+        </div>
+        <div class="page-intro__actions">
+          <el-button type="primary" plain @click="openCreate()">登记借贷</el-button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
       <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input v-model="filters.keyword" placeholder="客户ID / 客户名称 / 联系电话 / 企业名称" clearable />
@@ -347,7 +360,8 @@ onMounted(async () => {
           当前口径：{{ overviewMode.scopeLabel }}资金客户汇总
         </div>
 
-        <el-table v-loading="loading" :data="rows" table-layout="fixed">
+        <div class="table-wrap">
+          <el-table v-loading="loading" :data="rows" table-layout="fixed">
           <el-table-column
             v-for="column in overviewMode.columns"
             :key="column.key"
@@ -359,19 +373,16 @@ onMounted(async () => {
               {{ formatOverviewCell(row, column.key) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="180" fixed="right">
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row }">
               <el-button text type="primary" @click="openOrderDetail(row)">借贷单明细</el-button>
-              <el-button
-                text
-                type="primary"
-                @click="openRepaymentDetail({ customerId: row.customerId, customerName: row.customerName, capitalSourceType: row.capitalSourceType })"
-              >
+              <el-button text type="primary" @click="openRepaymentDetail({ customerId: row.customerId, customerName: row.customerName, capitalSourceType: row.capitalSourceType })">
                 {{ overviewMode.actionLabel }}还款
               </el-button>
             </template>
           </el-table-column>
         </el-table>
+        </div>
 
         <div class="list-pagination">
           <el-pagination
@@ -537,109 +548,33 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-.list-toolbar__filters,
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .list-toolbar__filters {
   flex: 1 1 640px;
 }
 
+.list-toolbar__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .list-toolbar__filters :deep(.el-input),
 .list-toolbar__filters :deep(.el-select) {
-  width: 220px;
+  width: 160px;
 }
 
-.section-caption {
-  margin-bottom: 12px;
-  color: var(--hc-text-soft);
-  font-size: 13px;
+.drawer-alert {
+  margin-bottom: 16px;
 }
 
-.list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
+:deep(.el-form-item__label) {
+  font-weight: 700;
+  color: var(--hc-text);
 }
 
-.drawer-shell {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.form-grid__full {
-  grid-column: 1 / -1;
-}
-
-.form-note {
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: var(--hc-surface-secondary);
-  color: var(--hc-text-soft);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.detail-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.detail-toolbar__meta,
-.detail-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
-}
-
-@media (max-width: 960px) {
-  .list-pagination,
-  .list-toolbar,
-  .detail-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .list-toolbar__filters :deep(.el-input),
-  .list-toolbar__filters :deep(.el-select) {
-    width: 100%;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .drawer-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .drawer-actions :deep(.el-button) {
-    width: 100%;
-  }
+:deep(.el-table th .cell) {
+  font-weight: 700;
+  color: var(--hc-text);
 }
 </style>

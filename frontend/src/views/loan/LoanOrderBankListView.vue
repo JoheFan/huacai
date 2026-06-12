@@ -281,11 +281,11 @@ export default { name: 'LoanOrderBankListView' }
             </template>
           </el-table-column>
           <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
-          <el-table-column label="操作" width="180" fixed="right">
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row }">
               <el-button text type="primary" @click="openOrderDetail(row)">借贷单明细</el-button>
               <el-button text type="primary" @click="openRepaymentDetail({ customerId: row.customerId, customerName: row.customerName, capitalSourceType: row.capitalSourceType })">
-                查看还款
+                还款
               </el-button>
             </template>
           </el-table-column>
@@ -402,87 +402,22 @@ export default { name: 'LoanOrderBankListView' }
 </template>
 
 <style scoped>
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters,
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__filters {
-  flex: 1 1 640px;
-}
-
 .list-toolbar__filters :deep(.el-input),
 .list-toolbar__filters :deep(.el-select) {
   width: 220px;
 }
 
-.section-caption {
-  margin-bottom: 12px;
-  color: var(--hc-text-soft);
-  font-size: 13px;
-}
-
 .list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
+  justify-content: flex-end;
+  margin-right: 0;
 }
 
 .drawer-shell {
-  display: flex;
   height: 100%;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.form-grid__full {
-  grid-column: 1 / -1;
-}
-
-.detail-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.detail-toolbar__meta,
-.detail-toolbar__actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
 }
 
 @media (max-width: 960px) {
-  .list-pagination,
-  .list-toolbar,
-  .detail-toolbar {
+  .list-pagination {
     flex-direction: column;
     align-items: stretch;
   }

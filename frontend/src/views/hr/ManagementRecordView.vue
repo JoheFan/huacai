@@ -81,22 +81,34 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>管理记录</h2>
-      </div>
-
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="转正记录" name="TRANSITION" />
-        <el-tab-pane label="离职记录" name="TERMINATION" />
-        <el-tab-pane label="调岗记录" name="TRANSFER" />
-      </el-tabs>
-
-      <div class="filter-bar">
-        <div class="filter-bar__right">
-          <el-button :icon="Refresh" @click="fetchList">刷新</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">人事管理</span>
+          <h2 class="page-intro__title">管理记录</h2>
+          <p class="page-intro__desc">统一查看转正、离职和调岗等管理记录，支持按记录类型切换，便于追踪关键人事动作。</p>
         </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section page-stack">
+        <el-tabs v-model="activeTab" class="page-tabs" @tab-change="handleTabChange">
+          <el-tab-pane label="转正记录" name="TRANSITION" />
+          <el-tab-pane label="离职记录" name="TERMINATION" />
+          <el-tab-pane label="调岗记录" name="TRANSFER" />
+        </el-tabs>
+
+        <div class="list-toolbar">
+          <div class="list-toolbar__actions">
+            <el-button plain :icon="Refresh" @click="fetchList">刷新</el-button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table v-loading="loading" :data="rows" stripe border style="width: 100%">
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="employeeName" label="员工姓名" width="100" />
@@ -110,6 +122,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -120,15 +133,10 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
   </section>
 </template>
 
 <style scoped>
-.page-shell { padding: 16px; }
-.card { background: #fff; border-radius: 8px; padding: 16px; }
-.card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.card__header h2 { font-size: 18px; font-weight: 600; margin: 0; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
-.filter-bar__right { margin-left: auto; }
 </style>

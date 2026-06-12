@@ -97,14 +97,6 @@ const handleRowMenuCommand =
     handleRowCommand(String(command), id)
   }
 
-const formatNumber = (value: number | null | undefined) => {
-  if (value == null) {
-    return '-'
-  }
-  return value.toLocaleString('zh-CN', {
-    maximumFractionDigits: 2,
-  })
-}
 
 onMounted(fetchList)
 </script>
@@ -115,8 +107,8 @@ onMounted(fetchList)
       <div class="card__section page-intro">
         <div class="page-intro__copy">
           <span class="page-intro__eyebrow">客户主档</span>
-          <h2>客户管理</h2>
-          <p>统一维护客户档案、最新风险摘要和负债登记入口。点击客户名称进入整页档案，点击操作区可直接切到对应记录页。</p>
+          <h2 class="page-intro__title">客户管理</h2>
+          <p class="page-intro__desc">统一维护客户档案、最新风险摘要和负债登记入口。点击客户名称进入整页档案，点击操作区可直接切到对应记录页。</p>
         </div>
 
         <div class="page-intro__actions">
@@ -170,16 +162,18 @@ onMounted(fetchList)
 
     <section class="card">
       <div class="card__section">
-        <el-table v-loading="loading" :data="rows" table-layout="fixed">
-          <el-table-column prop="customerNo" label="客户ID" min-width="130" />
+        <div class="table-wrap">
+          <el-table v-loading="loading" :data="rows" table-layout="fixed">
           <el-table-column label="客户名称" min-width="128" fixed="left">
             <template #default="{ row }">
-              <el-button text type="primary" @click="openArchive(row.id)">{{ row.customerName }}</el-button>
+              <el-tooltip :content="row.customerName" placement="top">
+                <el-button text type="primary" @click="openArchive(row.id)">{{ row.customerName }}</el-button>
+              </el-tooltip>
             </template>
           </el-table-column>
+          <el-table-column prop="customerNo" label="客户ID" min-width="130" />
           <el-table-column prop="mobile" label="联系电话" min-width="130" />
           <el-table-column prop="companyName" label="公司名称" min-width="170" show-overflow-tooltip />
-          <el-table-column prop="creditCode" label="统一社会信用代码" min-width="190" show-overflow-tooltip />
           <el-table-column prop="auditStatus" label="审核状态" min-width="100">
             <template #default="{ row }">
               <el-tag v-if="row.auditStatus === 'PENDING'" type="warning" size="small">待审核</el-tag>
@@ -196,28 +190,6 @@ onMounted(fetchList)
               <span v-else>{{ row.bizStatus || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="recommenderName" label="推荐人" min-width="100" />
-          <el-table-column prop="recommenderRate" label="推荐人返点" min-width="100">
-            <template #default="{ row }">{{ row.recommenderRate != null ? row.recommenderRate + '%' : '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="serviceFee" label="服务费" min-width="100">
-            <template #default="{ row }">{{ formatNumber(row.serviceFee) }}</template>
-          </el-table-column>
-          <el-table-column prop="testDate" label="测试日期" min-width="120">
-            <template #default="{ row }">{{ row.testDate || '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="testLimit" label="测试额度" min-width="110">
-            <template #default="{ row }">{{ formatNumber(row.testLimit) }}</template>
-          </el-table-column>
-          <el-table-column prop="trafficValue" label="流量" min-width="110">
-            <template #default="{ row }">{{ formatNumber(row.trafficValue) }}</template>
-          </el-table-column>
-          <el-table-column prop="compositeScore" label="综合评分" min-width="110">
-            <template #default="{ row }">{{ formatNumber(row.compositeScore) }}</template>
-          </el-table-column>
-          <el-table-column prop="thirdPartyScore" label="龙信商" min-width="100">
-            <template #default="{ row }">{{ formatNumber(row.thirdPartyScore) }}</template>
-          </el-table-column>
           <el-table-column label="垫付情况" min-width="110">
             <template #default="{ row }">
               <el-tag v-if="row.loanStatus === 'RUNNING'" type="warning" size="small">有垫付</el-tag>
@@ -226,7 +198,7 @@ onMounted(fetchList)
               <span v-else>{{ row.loanStatus || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right">
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row }">
               <div class="row-actions">
                 <el-button text type="primary" @click="openArchive(row.id)">详情</el-button>
@@ -251,6 +223,7 @@ onMounted(fetchList)
             </template>
           </el-table-column>
         </el-table>
+        </div>
 
         <div class="list-pagination">
           <span class="list-pagination__meta">共 {{ total }} 条</span>
@@ -268,104 +241,13 @@ onMounted(fetchList)
 </template>
 
 <style scoped>
-.page-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-intro__copy {
-  max-width: 760px;
-}
-
-.page-intro__eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  color: var(--hc-primary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-.page-intro h2 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
-}
-
-.page-intro p {
-  margin: 10px 0 0;
-  color: var(--hc-text-soft);
-  line-height: 1.6;
-}
-
-.page-intro__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.action-dropdown__trigger {
-  min-width: 88px;
-}
-
-.action-dropdown__trigger--text {
-  min-width: auto;
-  padding: 0;
-}
-
-.list-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.list-toolbar__filters {
-  flex: 1;
-  max-width: 520px;
-}
-
-.list-toolbar__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.list-pagination__meta {
-  color: var(--hc-text-soft);
-  font-size: 13px;
-}
-
-@media (max-width: 1180px) {
-  .page-intro,
-  .list-toolbar,
-  .list-pagination {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 960px) {
+  .list-toolbar__filters {
+    width: 100%;
   }
 
-  .page-intro__actions,
-  .list-toolbar__actions {
-    justify-content: flex-start;
+  .list-toolbar__filters :deep(.el-input) {
+    width: 100%;
   }
-
 }
 </style>

@@ -148,11 +148,17 @@ export default { name: 'OpportunityFollowView' }
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__section list-toolbar">
-        <div class="list-toolbar__info">
-          <span>商机ID：{{ opportunityId }}</span>
+      <div class="card__section detail-header">
+        <div class="detail-header__copy">
+          <span class="detail-header__eyebrow">商机管理 / 跟进记录</span>
+          <h2 class="detail-header__title">商机跟进记录</h2>
+          <p class="detail-header__desc">集中维护该商机的沟通时间、跟进详情和下一步动作，便于从商机列表快速回溯最新进展。</p>
+          <div class="detail-meta">
+            <span class="detail-meta__item">商机ID：<strong>{{ opportunityId }}</strong></span>
+            <span class="detail-meta__item">记录数：<strong>{{ total }}</strong></span>
+          </div>
         </div>
-        <div class="list-toolbar__actions">
+        <div class="detail-header__actions">
           <el-button plain @click="goBack">返回商机列表</el-button>
           <el-button type="primary" plain @click="openCreate">新增跟进记录</el-button>
         </div>
@@ -229,74 +235,15 @@ export default { name: 'OpportunityFollowView' }
 </template>
 
 <style scoped>
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.list-toolbar__info {
-  display: flex;
-  gap: 24px;
-  font-size: 14px;
-  color: var(--hc-text-secondary);
-}
-
-.list-toolbar__actions {
-  display: flex;
-  gap: 12px;
-}
-
 .list-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-.drawer-shell {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.form-grid__full {
-  grid-column: 1 / -1;
-}
-
-.drawer-actions {
-  margin-top: auto;
-  display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 12px;
+  margin-right: 0;
 }
 
 @media (max-width: 960px) {
-  .list-toolbar {
+  .list-pagination {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .drawer-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .drawer-actions :deep(.el-button) {
-    width: 100%;
   }
 }
 </style>

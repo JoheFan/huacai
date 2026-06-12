@@ -174,30 +174,44 @@ onMounted(() => {
 <template>
   <section class="page-shell">
     <section class="card">
-      <div class="card__header">
-        <h2>收款方管理</h2>
-        <div class="toolbar">
-          <el-button type="primary" :icon="Plus" @click="openCreate">新增</el-button>
+      <div class="card__section page-intro">
+        <div class="page-intro__copy">
+          <span class="page-intro__eyebrow">财务管理</span>
+          <h2 class="page-intro__title">收款方管理</h2>
+          <p class="page-intro__desc">集中维护支出业务使用的收款方资料，支持按名称和状态筛选，统一管理账户、联系人和启停状态。</p>
+        </div>
+
+        <div class="page-intro__actions">
+          <el-button type="primary" :icon="Plus" @click="openCreate">新增收款方</el-button>
         </div>
       </div>
+    </section>
 
-      <div class="filter-bar">
-        <el-input
-          v-model="filters.keyword"
-          placeholder="收款方名称"
-          style="width: 200px"
-          clearable
-          @keyup.enter="handleSearch"
-        />
-        <el-select v-model="filters.status" placeholder="状态" style="width: 120px" clearable>
-          <el-option label="正常" value="ENABLE" />
-          <el-option label="禁用" value="DISABLE" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-        <el-button :icon="Refresh" @click="fetchList">刷新</el-button>
+    <section class="card">
+      <div class="card__section list-toolbar">
+        <div class="list-toolbar__filters">
+          <el-input
+            v-model="filters.keyword"
+            placeholder="收款方名称"
+            clearable
+            @keyup.enter="handleSearch"
+          />
+          <el-select v-model="filters.status" placeholder="状态" clearable>
+            <el-option label="正常" value="ENABLE" />
+            <el-option label="禁用" value="DISABLE" />
+          </el-select>
+        </div>
+        <div class="list-toolbar__actions">
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button plain @click="handleReset">重置</el-button>
+          <el-button plain :icon="Refresh" @click="fetchList">刷新</el-button>
+        </div>
       </div>
+    </section>
 
+    <section class="card">
+      <div class="card__section">
+        <div class="table-wrap">
       <el-table v-loading="loading" :data="rows" stripe border>
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="payeeName" label="收款方名称" min-width="160" />
@@ -224,6 +238,7 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+        </div>
 
       <el-pagination
         v-model:current-page="filters.pageNum"
@@ -234,6 +249,7 @@ onMounted(() => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      </div>
     </section>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px" @close="dialogVisible = false">
@@ -275,38 +291,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-shell {
-  padding: 16px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.card__header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.toolbar {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  align-items: center;
-}
 </style>
