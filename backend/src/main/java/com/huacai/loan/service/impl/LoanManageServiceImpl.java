@@ -144,30 +144,36 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Override
     @Transactional
     public void createOrder(LoanOrderSaveRequest request) {
-        CustCustomer customer = getCustomerOrThrow(request.customerId());
+        getCustomerOrThrow(request.customerId());
         LoanOrder order = new LoanOrder();
         fillLoanOrderForCreate(order, request);
+        // 校验当前用户是否有权写入该资金来源类型的数据
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         order.setCreatedBy(currentUserProvider.getCurrentUserId());
         order.setUpdatedBy(currentUserProvider.getCurrentUserId());
         loanOrderMapper.insert(order);
-        // 创建后统一走回算逻辑，确保余额和状态一致
+        // 创建后统一走回算逻辑，refreshLoanOrderSummary 内部已刷新客户借贷状态
         refreshLoanOrderSummary(order.getId());
-        refreshCustomerLoanStatus(customer.getId());
     }
 
     @Override
     @Transactional
     public void updateOrder(Long id, LoanOrderSaveRequest request) {
         LoanOrder order = getLoanOrderOrThrow(id);
+        // 校验原记录资金来源访问权限，避免越权修改
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         Long originalCustomerId = order.getCustomerId();
         getCustomerOrThrow(request.customerId());
         fillLoanOrder(order, request);
+        // 校验目标资金来源类型访问权限，避免越权切换数据归属
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         order.setUpdatedBy(currentUserProvider.getCurrentUserId());
         loanOrderMapper.updateById(order);
+        // refreshLoanOrderSummary 内部已刷新当前客户状态
         refreshLoanOrderSummary(order.getId());
-        refreshCustomerLoanStatus(originalCustomerId);
+        // 客户发生变更时，原客户状态也需重新计算
         if (!Objects.equals(originalCustomerId, order.getCustomerId())) {
-            refreshCustomerLoanStatus(order.getCustomerId());
+            refreshCustomerLoanStatus(originalCustomerId);
         }
     }
 
@@ -175,6 +181,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Transactional
     public void deleteOrder(Long id) {
         LoanOrder order = getLoanOrderOrThrow(id);
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         Long customerId = order.getCustomerId();
         // 逻辑删除借贷单
         loanOrderMapper.deleteById(id);
@@ -257,6 +264,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     public LoanRepaymentVO repaymentDetail(Long pathLoanOrderId, Long id) {
         LoanRepayment repayment = getLoanRepaymentOrThrow(id);
         validateRepaymentOwnership(pathLoanOrderId, repayment.getLoanOrderId());
+        validateCapitalSourceAccess(repayment.getCapitalSourceType());
         CustCustomer customer = getCustomerOrThrow(repayment.getCustomerId());
         return toLoanRepaymentVO(repayment, customer);
     }
@@ -266,6 +274,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     public void createRepayment(Long pathLoanOrderId, LoanRepaymentSaveRequest request) {
         Long effectiveLoanOrderId = resolveAndValidateLoanOrderId(pathLoanOrderId, request.loanOrderId());
         LoanOrder order = getLoanOrderOrThrow(effectiveLoanOrderId);
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         LoanRepayment repayment = new LoanRepayment();
         fillLoanRepayment(repayment, request, order);
         repayment.setCreatedBy(currentUserProvider.getCurrentUserId());
@@ -278,6 +287,8 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Transactional
     public void updateRepayment(Long pathLoanOrderId, Long id, LoanRepaymentSaveRequest request) {
         LoanRepayment repayment = getLoanRepaymentOrThrow(id);
+        // 校验原还款记录资金来源访问权限
+        validateCapitalSourceAccess(repayment.getCapitalSourceType());
         Long oldLoanOrderId = repayment.getLoanOrderId();
         // 更新时必须校验原记录归属与 path 一致
         if (pathLoanOrderId != null && !Objects.equals(pathLoanOrderId, oldLoanOrderId)) {
@@ -285,6 +296,8 @@ public class LoanManageServiceImpl implements LoanManageService {
         }
         Long effectiveLoanOrderId = resolveAndValidateLoanOrderIdForUpdate(pathLoanOrderId, request.loanOrderId(), oldLoanOrderId);
         LoanOrder order = getLoanOrderOrThrow(effectiveLoanOrderId);
+        // 校验目标借贷单资金来源访问权限
+        validateCapitalSourceAccess(order.getCapitalSourceType());
         fillLoanRepayment(repayment, request, order);
         repayment.setUpdatedBy(currentUserProvider.getCurrentUserId());
         loanRepaymentMapper.updateById(repayment);
@@ -298,6 +311,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Transactional
     public void deleteRepayment(Long pathLoanOrderId, Long id) {
         LoanRepayment repayment = getLoanRepaymentOrThrow(id);
+        validateCapitalSourceAccess(repayment.getCapitalSourceType());
         Long loanOrderId = repayment.getLoanOrderId();
         // 校验归属
         if (pathLoanOrderId != null && !Objects.equals(pathLoanOrderId, loanOrderId)) {
@@ -313,6 +327,7 @@ public class LoanManageServiceImpl implements LoanManageService {
 
     @Override
     public LoanCustomerSummaryVO getCustomerSummary(Long customerId, String capitalSourceType) {
+        validateCapitalSourceAccess(capitalSourceType);
         LambdaQueryWrapper<LoanCustomerSummary> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(LoanCustomerSummary::getCustomerId, customerId)
                 .eq(LoanCustomerSummary::getCapitalSourceType, capitalSourceType);
@@ -327,6 +342,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Override
     @Transactional
     public void saveCustomerSummary(LoanCustomerSummarySaveRequest request) {
+        validateCapitalSourceAccess(request.capitalSourceType());
         getCustomerOrThrow(request.customerId());
         LambdaQueryWrapper<LoanCustomerSummary> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(LoanCustomerSummary::getCustomerId, request.customerId())
@@ -358,6 +374,7 @@ public class LoanManageServiceImpl implements LoanManageService {
     @Override
     @Transactional
     public void deleteCustomerSummary(Long customerId, String capitalSourceType) {
+        validateCapitalSourceAccess(capitalSourceType);
         LambdaQueryWrapper<LoanCustomerSummary> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(LoanCustomerSummary::getCustomerId, customerId)
                 .eq(LoanCustomerSummary::getCapitalSourceType, capitalSourceType);
@@ -761,26 +778,6 @@ public class LoanManageServiceImpl implements LoanManageService {
                 repayment.getCreatedAt(),
                 repayment.getUpdatedAt()
         );
-    }
-
-    private Long resolveLoanOrderId(Long pathLoanOrderId, Long requestLoanOrderId) {
-        if (pathLoanOrderId != null) {
-            return pathLoanOrderId;
-        }
-        if (requestLoanOrderId != null) {
-            return requestLoanOrderId;
-        }
-        throw new BusinessException("还款记录缺少借贷单ID");
-    }
-
-    private Long resolveLoanOrderId(Long pathLoanOrderId, Long requestLoanOrderId, Long fallbackLoanOrderId) {
-        if (pathLoanOrderId != null) {
-            return pathLoanOrderId;
-        }
-        if (requestLoanOrderId != null) {
-            return requestLoanOrderId;
-        }
-        return fallbackLoanOrderId;
     }
 
     /**
