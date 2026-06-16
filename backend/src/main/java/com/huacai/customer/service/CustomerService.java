@@ -33,7 +33,11 @@ public interface CustomerService {
 
     List<CustomerRiskVO> listRisksByCustomer(Long customerId);
 
+    CustomerRiskVO getRisk(Long id);
+
     List<CustomerDebtVO> listDebtsByCustomer(Long customerId);
+
+    CustomerDebtVO getDebt(Long id);
 
     List<CustomerContractVO> listContractsByCustomer(Long customerId);
 

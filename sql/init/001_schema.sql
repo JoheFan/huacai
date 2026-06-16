@@ -378,6 +378,7 @@ CREATE TABLE `cust_customer_debt` (
   `customer_id` BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
   `debt_type` VARCHAR(64) NOT NULL COMMENT '负债类型',
   `debt_amount` DECIMAL(14,2) DEFAULT NULL COMMENT '负债总额',
+  `total_repayment_amount` DECIMAL(14,2) DEFAULT NULL COMMENT '总需还金额',
   `repaid_amount` DECIMAL(14,2) DEFAULT NULL COMMENT '已偿还金额',
   `pending_amount` DECIMAL(14,2) DEFAULT NULL COMMENT '待偿还金额',
   `installment_amount` DECIMAL(14,2) DEFAULT NULL COMMENT '每期金额',

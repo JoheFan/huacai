@@ -107,12 +107,12 @@ public class CustomerController {
     }
 
     @GetMapping("/{customerId}/scores/{id}")
-    public ApiResponse<Map<String, Object>> scoreDetail(@PathVariable Long customerId, @PathVariable Long id) {
-        return ApiResponse.success(Map.of("id", id, "customerId", customerId));
+    public ApiResponse<CustomerRiskVO> scoreDetail(@PathVariable Long customerId, @PathVariable Long id) {
+        return ApiResponse.success(customerService.getRisk(id));
     }
 
     @PostMapping("/{customerId}/scores")
-    public ApiResponse<Void> createScore(@PathVariable Long customerId, @RequestBody CustomerScoreSaveRequest request) {
+    public ApiResponse<Void> createScore(@PathVariable Long customerId, @Valid @RequestBody CustomerScoreSaveRequest request) {
         customerService.createRisk(new CustomerScoreSaveRequest(
                 request.id(),
                 customerId,
@@ -128,7 +128,7 @@ public class CustomerController {
 
     @PutMapping("/{customerId}/scores/{id}")
     public ApiResponse<Void> updateScore(@PathVariable Long customerId, @PathVariable Long id,
-                                         @RequestBody CustomerScoreSaveRequest request) {
+                                         @Valid @RequestBody CustomerScoreSaveRequest request) {
         customerService.updateRisk(id, new CustomerScoreSaveRequest(
                 request.id(),
                 customerId,
@@ -155,7 +155,7 @@ public class CustomerController {
 
     @PostMapping("/{customerId}/status-logs")
     public ApiResponse<Void> createStatusLog(@PathVariable Long customerId,
-                                             @RequestBody CustomerStatusLogSaveRequest request) {
+                                             @Valid @RequestBody CustomerStatusLogSaveRequest request) {
         customerService.updateCustomerStatus(customerId, request.statusCode(), request.statusName());
         return ApiResponse.success();
     }
@@ -166,12 +166,12 @@ public class CustomerController {
     }
 
     @GetMapping("/{customerId}/debts/{id}")
-    public ApiResponse<Map<String, Object>> debtDetail(@PathVariable Long customerId, @PathVariable Long id) {
-        return ApiResponse.success(Map.of("id", id, "customerId", customerId));
+    public ApiResponse<CustomerDebtVO> debtDetail(@PathVariable Long customerId, @PathVariable Long id) {
+        return ApiResponse.success(customerService.getDebt(id));
     }
 
     @PostMapping("/{customerId}/debts")
-    public ApiResponse<Void> createDebt(@PathVariable Long customerId, @RequestBody CustomerDebtSaveRequest request) {
+    public ApiResponse<Void> createDebt(@PathVariable Long customerId, @Valid @RequestBody CustomerDebtSaveRequest request) {
         customerService.createDebt(new CustomerDebtSaveRequest(
                 request.id(),
                 customerId,
@@ -189,7 +189,7 @@ public class CustomerController {
 
     @PutMapping("/{customerId}/debts/{id}")
     public ApiResponse<Void> updateDebt(@PathVariable Long customerId, @PathVariable Long id,
-                                        @RequestBody CustomerDebtSaveRequest request) {
+                                        @Valid @RequestBody CustomerDebtSaveRequest request) {
         customerService.updateDebt(id, new CustomerDebtSaveRequest(
                 request.id(),
                 customerId,
@@ -223,14 +223,14 @@ public class CustomerController {
 
     @PostMapping("/{customerId}/contracts")
     public ApiResponse<Void> createContract(@PathVariable Long customerId,
-                                            @RequestBody CustomerContractSaveRequest request) {
+                                            @Valid @RequestBody CustomerContractSaveRequest request) {
         customerService.createContract(customerId, request);
         return ApiResponse.success();
     }
 
     @PutMapping("/{customerId}/contracts/{id}")
     public ApiResponse<Void> updateContract(@PathVariable Long customerId, @PathVariable Long id,
-                                            @RequestBody CustomerContractSaveRequest request) {
+                                            @Valid @RequestBody CustomerContractSaveRequest request) {
         customerService.updateContract(id, request);
         return ApiResponse.success();
     }
@@ -252,14 +252,14 @@ public class CustomerController {
     }
 
     @PostMapping("/{customerId}/trades")
-    public ApiResponse<Void> createTrade(@PathVariable Long customerId, @RequestBody CustomerTradeSaveRequest request) {
+    public ApiResponse<Void> createTrade(@PathVariable Long customerId, @Valid @RequestBody CustomerTradeSaveRequest request) {
         customerService.createTrade(customerId, request);
         return ApiResponse.success();
     }
 
     @PutMapping("/{customerId}/trades/{id}")
     public ApiResponse<Void> updateTrade(@PathVariable Long customerId, @PathVariable Long id,
-                                         @RequestBody CustomerTradeSaveRequest request) {
+                                         @Valid @RequestBody CustomerTradeSaveRequest request) {
         customerService.updateTrade(id, request);
         return ApiResponse.success();
     }

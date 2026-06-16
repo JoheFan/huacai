@@ -30,5 +30,5 @@ public record CustomerArchiveSaveRequest(
         @Valid List<CustomerScoreSaveRequest> riskRecords,
         @Valid List<CustomerDebtSaveRequest> debtRecords,
         @Valid List<CustomerContractSaveRequest> contractRecords
-) {
+) implements CustomerProfileFields {
 }

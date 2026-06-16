@@ -41,5 +41,5 @@ public record CustomerSaveRequest(
         Boolean taxRegistrationNormal,
         @Size(max = 1000, message = "备注长度不能超过1000")
         String remark
-) {
+) implements CustomerProfileFields {
 }

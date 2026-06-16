@@ -14,6 +14,7 @@ public class CustCustomerDebt extends AuditableEntity {
     private Long customerId;
     private String debtType;
     private BigDecimal debtAmount;
+    private BigDecimal totalRepaymentAmount;
     private BigDecimal repaidAmount;
     private BigDecimal pendingAmount;
     private BigDecimal installmentAmount;
@@ -50,6 +51,14 @@ public class CustCustomerDebt extends AuditableEntity {
 
     public void setDebtAmount(BigDecimal debtAmount) {
         this.debtAmount = debtAmount;
+    }
+
+    public BigDecimal getTotalRepaymentAmount() {
+        return totalRepaymentAmount;
+    }
+
+    public void setTotalRepaymentAmount(BigDecimal totalRepaymentAmount) {
+        this.totalRepaymentAmount = totalRepaymentAmount;
     }
 
     public BigDecimal getRepaidAmount() {

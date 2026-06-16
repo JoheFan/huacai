@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huacai.common.exception.BusinessException;
 import com.huacai.common.model.PageResponse;
 import com.huacai.customer.dto.CustomerArchiveSaveRequest;
 import com.huacai.customer.dto.CustomerContractSaveRequest;
 import com.huacai.customer.dto.CustomerDebtSaveRequest;
+import com.huacai.customer.dto.CustomerProfileFields;
 import com.huacai.customer.dto.CustomerSaveRequest;
 import com.huacai.customer.dto.CustomerScoreSaveRequest;
 import com.huacai.customer.dto.CustomerTradeSaveRequest;
@@ -54,6 +56,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -143,6 +146,24 @@ public class CustomerServiceImpl implements CustomerService {
         });
     }
 
+    /**
+     * 把风险/负债等子记录的查询限制在当前用户可见的客户范围内，
+     * 与客户列表 {@link #page} 的口径保持一致（非超管仅能看到本人创建的客户）。
+     * 缺少该过滤会导致风险评估、负债登记列表越权暴露全部客户的敏感数据。
+     */
+    private <T> void applyAccessibleCustomerScope(LambdaQueryWrapper<T> wrapper, SFunction<T, Long> customerIdColumn) {
+        currentUserProvider.getCurrentUser().ifPresent(authUser -> {
+            if (authUser.isSuperAdmin()) {
+                return;
+            }
+            // 用子查询代替"先查全部可见客户 ID 再 IN(...)"：
+            // 避免客户量大时把成百上千个 ID 拼成超长 IN 列表（可能触碰数据库参数上限并拖慢查询），
+            // 交由数据库一次完成关联。authUser.getUserId() 来自鉴权上下文（可信 Long），无注入风险。
+            wrapper.inSql(customerIdColumn,
+                    "SELECT id FROM cust_customer WHERE created_by = " + authUser.getUserId());
+        });
+    }
+
     @Override
     public CustomerArchiveVO detailArchive(Long id) {
         CustCustomer customer = getCustomerOrThrow(id);
@@ -163,6 +184,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .orderByDesc(CustCustomerScore::getTestDate)
                 .orderByDesc(CustCustomerScore::getUpdatedAt);
         applyRiskQueryFilter(wrapper, query.getCustomerId(), query.getKeyword());
+        applyAccessibleCustomerScope(wrapper, CustCustomerScore::getCustomerId);
         Page<CustCustomerScore> result = customerScoreMapper.selectPage(page, wrapper);
         Map<Long, CustCustomer> customerMap = loadCustomerMap(result.getRecords().stream()
                 .map(CustCustomerScore::getCustomerId)
@@ -179,6 +201,7 @@ public class CustomerServiceImpl implements CustomerService {
         LambdaQueryWrapper<CustCustomerDebt> wrapper = new LambdaQueryWrapper<CustCustomerDebt>()
                 .orderByDesc(CustCustomerDebt::getUpdatedAt);
         applyDebtQueryFilter(wrapper, query.getCustomerId(), query.getKeyword());
+        applyAccessibleCustomerScope(wrapper, CustCustomerDebt::getCustomerId);
         Page<CustCustomerDebt> result = customerDebtMapper.selectPage(page, wrapper);
         Map<Long, CustCustomer> customerMap = loadCustomerMap(result.getRecords().stream()
                 .map(CustCustomerDebt::getCustomerId)
@@ -321,10 +344,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerRiskVO getRisk(Long id) {
+        CustCustomerScore score = getRiskOrThrow(id);
+        CustCustomer customer = getCustomerOrThrow(score.getCustomerId());
+        return toRiskVO(score, customer);
+    }
+
+    @Override
     @Transactional
     public void createRisk(CustomerScoreSaveRequest request) {
         Long customerId = requireCustomerId(request.customerId());
-        getCustomerOrThrow(customerId);
+        validateCustomerDataScope(getCustomerOrThrow(customerId));
         CustCustomerScore score = new CustCustomerScore();
         fillScore(score, request, customerId);
         score.setCreatedBy(currentUserProvider.getCurrentUserId());
@@ -335,10 +365,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void updateRisk(Long id, CustomerScoreSaveRequest request) {
+        // getRiskOrThrow 已校验记录存在且属于当前用户可见的客户。
+        // 归属客户固定使用记录原本的 customerId，忽略请求体里的 customerId，
+        // 避免把记录改挂到其他客户（即便目标可见也不应通过编辑接口迁移归属）。
         CustCustomerScore score = getRiskOrThrow(id);
-        Long customerId = request.customerId() == null ? score.getCustomerId() : request.customerId();
-        getCustomerOrThrow(customerId);
-        fillScore(score, request, customerId);
+        fillScore(score, request, score.getCustomerId());
         score.setUpdatedBy(currentUserProvider.getCurrentUserId());
         customerScoreMapper.updateById(score);
     }
@@ -351,10 +382,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerDebtVO getDebt(Long id) {
+        CustCustomerDebt debt = getDebtOrThrow(id);
+        CustCustomer customer = getCustomerOrThrow(debt.getCustomerId());
+        return toDebtVO(debt, customer);
+    }
+
+    @Override
     @Transactional
     public void createDebt(CustomerDebtSaveRequest request) {
         Long customerId = requireCustomerId(request.customerId());
-        getCustomerOrThrow(customerId);
+        validateCustomerDataScope(getCustomerOrThrow(customerId));
         CustCustomerDebt debt = new CustCustomerDebt();
         fillDebt(debt, request, customerId);
         debt.setCreatedBy(currentUserProvider.getCurrentUserId());
@@ -365,10 +403,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void updateDebt(Long id, CustomerDebtSaveRequest request) {
+        // 归属客户固定使用记录原本的 customerId（getDebtOrThrow 已校验归属），
+        // 忽略请求体里的 customerId，避免通过编辑接口迁移记录归属。
         CustCustomerDebt debt = getDebtOrThrow(id);
-        Long customerId = request.customerId() == null ? debt.getCustomerId() : request.customerId();
-        getCustomerOrThrow(customerId);
-        fillDebt(debt, request, customerId);
+        fillDebt(debt, request, debt.getCustomerId());
         debt.setUpdatedBy(currentUserProvider.getCurrentUserId());
         customerDebtMapper.updateById(debt);
     }
@@ -469,59 +507,115 @@ public class CustomerServiceImpl implements CustomerService {
         customerTradeMapper.deleteById(id);
     }
 
+    /**
+     * 按 id 增量同步档案子记录：表单里带 id 的更新、不带 id 的新增、表单里已不存在的才删除。
+     * 不再"全删重建"——避免独立列表页(风险/负债)新增的记录被档案保存静默清空，
+     * 也避免逻辑删除行堆积和子记录 id 每次保存都漂移。
+     */
     private void replaceArchiveChildren(Long customerId, CustomerArchiveSaveRequest request) {
         clearFileBindings(CUSTOMER_ARCHIVE_BIZ_TYPE, List.of(customerId));
         bindFiles(CUSTOMER_ARCHIVE_BIZ_TYPE, customerId, request.archiveFileIds());
 
-        clearContractBindings(customerId);
-        customerScoreMapper.delete(new LambdaQueryWrapper<CustCustomerScore>().eq(CustCustomerScore::getCustomerId, customerId));
-        customerDebtMapper.delete(new LambdaQueryWrapper<CustCustomerDebt>().eq(CustCustomerDebt::getCustomerId, customerId));
-        customerContractMapper.delete(new LambdaQueryWrapper<CustCustomerContract>().eq(CustCustomerContract::getCustomerId, customerId));
-
-        saveScores(customerId, request.riskRecords());
-        saveDebts(customerId, request.debtRecords());
-        saveContracts(customerId, request.contractRecords());
+        upsertScores(customerId, safeList(request.riskRecords()));
+        upsertDebts(customerId, safeList(request.debtRecords()));
+        upsertContracts(customerId, safeList(request.contractRecords()));
     }
 
-    private void saveScores(Long customerId, List<CustomerScoreSaveRequest> records) {
-        for (CustomerScoreSaveRequest record : safeList(records)) {
+    private void upsertScores(Long customerId, List<CustomerScoreSaveRequest> records) {
+        List<Long> existingIds = customerScoreMapper.selectList(new LambdaQueryWrapper<CustCustomerScore>()
+                        .select(CustCustomerScore::getId)
+                        .eq(CustCustomerScore::getCustomerId, customerId))
+                .stream().map(CustCustomerScore::getId).toList();
+        Set<Long> keepIds = collectKeepIds(records, CustomerScoreSaveRequest::id);
+        assertChildIdsBelong(existingIds, keepIds, "风险评估记录");
+        List<Long> removedIds = existingIds.stream().filter(id -> !keepIds.contains(id)).toList();
+        if (!removedIds.isEmpty()) {
+            customerScoreMapper.deleteBatchIds(removedIds);
+        }
+        Long currentUserId = currentUserProvider.getCurrentUserId();
+        for (CustomerScoreSaveRequest record : records) {
             CustCustomerScore score = new CustCustomerScore();
             fillScore(score, record, customerId);
-            score.setCreatedBy(currentUserProvider.getCurrentUserId());
-            score.setUpdatedBy(currentUserProvider.getCurrentUserId());
-            customerScoreMapper.insert(score);
+            score.setUpdatedBy(currentUserId);
+            if (record.id() != null) {
+                score.setId(record.id());
+                customerScoreMapper.updateById(score);
+            } else {
+                score.setCreatedBy(currentUserId);
+                customerScoreMapper.insert(score);
+            }
         }
     }
 
-    private void saveDebts(Long customerId, List<CustomerDebtSaveRequest> records) {
-        for (CustomerDebtSaveRequest record : safeList(records)) {
+    private void upsertDebts(Long customerId, List<CustomerDebtSaveRequest> records) {
+        List<Long> existingIds = customerDebtMapper.selectList(new LambdaQueryWrapper<CustCustomerDebt>()
+                        .select(CustCustomerDebt::getId)
+                        .eq(CustCustomerDebt::getCustomerId, customerId))
+                .stream().map(CustCustomerDebt::getId).toList();
+        Set<Long> keepIds = collectKeepIds(records, CustomerDebtSaveRequest::id);
+        assertChildIdsBelong(existingIds, keepIds, "负债登记记录");
+        List<Long> removedIds = existingIds.stream().filter(id -> !keepIds.contains(id)).toList();
+        if (!removedIds.isEmpty()) {
+            customerDebtMapper.deleteBatchIds(removedIds);
+        }
+        Long currentUserId = currentUserProvider.getCurrentUserId();
+        for (CustomerDebtSaveRequest record : records) {
             CustCustomerDebt debt = new CustCustomerDebt();
             fillDebt(debt, record, customerId);
-            debt.setCreatedBy(currentUserProvider.getCurrentUserId());
-            debt.setUpdatedBy(currentUserProvider.getCurrentUserId());
-            customerDebtMapper.insert(debt);
+            debt.setUpdatedBy(currentUserId);
+            if (record.id() != null) {
+                debt.setId(record.id());
+                customerDebtMapper.updateById(debt);
+            } else {
+                debt.setCreatedBy(currentUserId);
+                customerDebtMapper.insert(debt);
+            }
         }
     }
 
-    private void saveContracts(Long customerId, List<CustomerContractSaveRequest> records) {
-        for (CustomerContractSaveRequest record : safeList(records)) {
+    private void upsertContracts(Long customerId, List<CustomerContractSaveRequest> records) {
+        List<Long> existingIds = customerContractMapper.selectList(new LambdaQueryWrapper<CustCustomerContract>()
+                        .select(CustCustomerContract::getId)
+                        .eq(CustCustomerContract::getCustomerId, customerId))
+                .stream().map(CustCustomerContract::getId).toList();
+        Set<Long> keepIds = collectKeepIds(records, CustomerContractSaveRequest::id);
+        assertChildIdsBelong(existingIds, keepIds, "合同");
+        List<Long> removedIds = existingIds.stream().filter(id -> !keepIds.contains(id)).toList();
+        if (!removedIds.isEmpty()) {
+            clearFileBindings(CUSTOMER_CONTRACT_BIZ_TYPE, removedIds);
+            customerContractMapper.deleteBatchIds(removedIds);
+        }
+        Long currentUserId = currentUserProvider.getCurrentUserId();
+        for (CustomerContractSaveRequest record : records) {
             CustCustomerContract contract = new CustCustomerContract();
             fillContract(contract, record, customerId);
-            contract.setCreatedBy(currentUserProvider.getCurrentUserId());
-            contract.setUpdatedBy(currentUserProvider.getCurrentUserId());
-            customerContractMapper.insert(contract);
-            bindFiles(CUSTOMER_CONTRACT_BIZ_TYPE, contract.getId(), record.fileIds());
+            contract.setUpdatedBy(currentUserId);
+            if (record.id() != null) {
+                contract.setId(record.id());
+                customerContractMapper.updateById(contract);
+                clearFileBindings(CUSTOMER_CONTRACT_BIZ_TYPE, List.of(record.id()));
+                bindFiles(CUSTOMER_CONTRACT_BIZ_TYPE, record.id(), record.fileIds());
+            } else {
+                contract.setCreatedBy(currentUserId);
+                customerContractMapper.insert(contract);
+                bindFiles(CUSTOMER_CONTRACT_BIZ_TYPE, contract.getId(), record.fileIds());
+            }
         }
     }
 
-    private void clearContractBindings(Long customerId) {
-        List<Long> contractIds = customerContractMapper.selectList(new QueryWrapper<CustCustomerContract>()
-                        .select("id")
-                        .eq("customer_id", customerId))
-                .stream()
-                .map(CustCustomerContract::getId)
-                .toList();
-        clearFileBindings(CUSTOMER_CONTRACT_BIZ_TYPE, contractIds);
+    private <T> Set<Long> collectKeepIds(List<T> records, Function<T, Long> idGetter) {
+        return records.stream().map(idGetter).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    /**
+     * 表单回传的子记录 id 必须确实属于该客户，否则拒绝——防止通过伪造 id 改写他人客户的子记录。
+     */
+    private void assertChildIdsBelong(Collection<Long> existingIds, Collection<Long> requestedIds, String label) {
+        for (Long id : requestedIds) {
+            if (!existingIds.contains(id)) {
+                throw new BusinessException(label + "不存在或不属于该客户");
+            }
+        }
     }
 
     private void bindFiles(String bizType, Long bizId, List<Long> fileIds) {
@@ -730,28 +824,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
-    private void fillCustomer(CustCustomer customer, CustomerSaveRequest request) {
-        customer.setCustomerName(request.customerName().trim());
-        customer.setGender(request.gender());
-        customer.setIdCard(request.idCard());
-        customer.setBirthday(request.birthday());
-        customer.setAge(calculateAge(request.birthday()));
-        customer.setMobile(request.mobile());
-        customer.setCompanyName(request.companyName());
-        customer.setCreditCode(request.creditCode());
-        customer.setEstablishedDate(request.establishedDate());
-        customer.setIndustry(request.industry());
-        customer.setBusinessAddress(request.businessAddress());
-        customer.setBankName(request.bankName());
-        customer.setBankAccount(request.bankAccount());
-        customer.setRecommenderName(request.recommenderName());
-        customer.setRecommenderRate(request.recommenderRate());
-        customer.setServiceFee(request.serviceFee());
-        customer.setBizStatus(StringUtils.hasText(request.bizStatus()) ? request.bizStatus() : "INIT");
-        customer.setTaxRegistrationNormal(request.taxRegistrationNormal());
-    }
-
-    private void fillCustomer(CustCustomer customer, CustomerArchiveSaveRequest request) {
+    private void fillCustomer(CustCustomer customer, CustomerProfileFields request) {
         customer.setCustomerName(request.customerName().trim());
         customer.setGender(request.gender());
         customer.setIdCard(request.idCard());
@@ -791,6 +864,7 @@ public class CustomerServiceImpl implements CustomerService {
         debt.setCustomerId(customerId);
         debt.setDebtType(request.debtType());
         debt.setDebtAmount(request.debtAmount());
+        debt.setTotalRepaymentAmount(request.totalRepaymentAmount());
         debt.setRepaidAmount(request.advancePaidAmount());
         debt.setPendingAmount(pendingAmount);
         debt.setInstallmentAmount(request.installmentAmount());
@@ -927,7 +1001,7 @@ public class CustomerServiceImpl implements CustomerService {
                 customer == null ? "" : customer.getCreditCode(),
                 record.getDebtType(),
                 record.getDebtAmount(),
-                record.getDebtAmount(),
+                record.getTotalRepaymentAmount(),
                 record.getRepaidAmount(),
                 record.getPendingAmount(),
                 record.getInstallmentAmount(),

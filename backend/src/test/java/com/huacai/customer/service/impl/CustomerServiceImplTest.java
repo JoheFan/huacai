@@ -6,12 +6,14 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huacai.customer.dto.CustomerArchiveSaveRequest;
 import com.huacai.customer.dto.CustomerContractSaveRequest;
 import com.huacai.customer.dto.CustomerDebtSaveRequest;
 import com.huacai.customer.dto.CustomerScoreSaveRequest;
 import com.huacai.customer.entity.CustCustomer;
+import com.huacai.customer.entity.CustCustomerContract;
 import com.huacai.customer.entity.CustCustomerDebt;
 import com.huacai.customer.entity.CustCustomerScore;
 import com.huacai.customer.mapper.CustomerContractMapper;
@@ -25,12 +27,18 @@ import com.huacai.customer.query.CustomerPageQuery;
 import com.huacai.customer.query.CustomerRiskPageQuery;
 import com.huacai.file.entity.SysFile;
 import com.huacai.file.mapper.FileMapper;
+import com.huacai.security.AuthUser;
 import com.huacai.security.CurrentUserProvider;
 import com.huacai.system.mapper.UserMapper;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -66,6 +74,16 @@ class CustomerServiceImplTest {
 
     @Mock
     private CurrentUserProvider currentUserProvider;
+
+    @BeforeAll
+    static void primeLambdaCache() {
+        // 纯单元测试无 Spring/MyBatis 上下文，预热实体表信息缓存，否则 LambdaQueryWrapper 解析列名会报 "can not find lambda cache"
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(new MybatisConfiguration(), "");
+        TableInfoHelper.initTableInfo(assistant, CustCustomer.class);
+        TableInfoHelper.initTableInfo(assistant, CustCustomerScore.class);
+        TableInfoHelper.initTableInfo(assistant, CustCustomerDebt.class);
+        TableInfoHelper.initTableInfo(assistant, CustCustomerContract.class);
+    }
 
     @Test
     void createArchivePersistsCustomerAndChildRecords() {
@@ -160,6 +178,58 @@ class CustomerServiceImplTest {
     }
 
     @Test
+    void updateArchiveUpsertsChildrenByIdInsteadOfFullRebuild() {
+        CustCustomer existing = new CustCustomer();
+        existing.setId(8L);
+        existing.setCustomerName("张三");
+        when(customerMapper.selectById(8L)).thenReturn(existing);
+
+        // 客户已有两条风险记录：11 保留并更新，12 表单已移除应删除
+        CustCustomerScore keep = new CustCustomerScore();
+        keep.setId(11L);
+        keep.setCustomerId(8L);
+        CustCustomerScore removed = new CustCustomerScore();
+        removed.setId(12L);
+        removed.setCustomerId(8L);
+        when(customerScoreMapper.selectList(any())).thenReturn(List.of(keep, removed));
+
+        CustomerServiceImpl service = new CustomerServiceImpl(
+                customerMapper,
+                customerScoreMapper,
+                customerDebtMapper,
+                customerContractMapper,
+                customerStatusLogMapper,
+                customerTradeMapper,
+                fileMapper,
+                userMapper,
+                currentUserProvider
+        );
+
+        service.updateArchive(8L, new CustomerArchiveSaveRequest(
+                null, "张三", null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null,
+                List.of(),
+                List.of(
+                        // 带 id：更新已有记录 11
+                        new CustomerScoreSaveRequest(11L, 8L, LocalDate.of(2026, 4, 15),
+                                new BigDecimal("90"), new BigDecimal("1950000"),
+                                new BigDecimal("118"), new BigDecimal("113"), "更新"),
+                        // 不带 id：新增
+                        new CustomerScoreSaveRequest(null, 8L, LocalDate.of(2026, 5, 1),
+                                new BigDecimal("80"), new BigDecimal("1000000"),
+                                new BigDecimal("100"), new BigDecimal("99"), "新增")
+                ),
+                List.of(),
+                List.of()
+        ));
+
+        // 11 走更新、新增走 insert、12 被删除——不再全删重建
+        verify(customerScoreMapper).updateById(any(CustCustomerScore.class));
+        verify(customerScoreMapper).insert(any(CustCustomerScore.class));
+        verify(customerScoreMapper).deleteBatchIds(List.of(12L));
+    }
+
+    @Test
     void pageReturnsLatestRiskSummaryOnCustomerRows() {
         CustCustomer customer = new CustCustomer();
         customer.setId(8L);
@@ -236,6 +306,7 @@ class CustomerServiceImplTest {
         debt.setCustomerId(8L);
         debt.setDebtType("信用卡");
         debt.setDebtAmount(new BigDecimal("100000"));
+        debt.setTotalRepaymentAmount(new BigDecimal("120000"));
         debt.setRepaidAmount(new BigDecimal("22000"));
         debt.setPendingAmount(new BigDecimal("78000"));
 
@@ -268,9 +339,52 @@ class CustomerServiceImplTest {
 
         assertThat(riskRow.customerName()).isEqualTo("张三");
         assertThat(debtRow.customerName()).isEqualTo("张三");
-        assertThat(debtRow.totalRepaymentAmount()).isEqualByComparingTo("100000");
+        assertThat(debtRow.debtAmount()).isEqualByComparingTo("100000");
+        assertThat(debtRow.totalRepaymentAmount()).isEqualByComparingTo("120000");
         assertThat(debtRow.advancePaidAmount()).isEqualByComparingTo("22000");
         assertThat(debtRow.pendingAmount()).isEqualByComparingTo("78000");
+    }
+
+    @Test
+    void riskAndDebtPagesRestrictToAccessibleCustomersForNonSuperAdmin() {
+        AuthUser authUser = org.mockito.Mockito.mock(AuthUser.class);
+        when(authUser.isSuperAdmin()).thenReturn(false);
+        when(authUser.getUserId()).thenReturn(7L);
+        when(currentUserProvider.getCurrentUser()).thenReturn(Optional.of(authUser));
+
+        Page<CustCustomerScore> emptyRiskPage = new Page<>(1, 10);
+        emptyRiskPage.setRecords(List.of());
+        emptyRiskPage.setTotal(0);
+        Page<CustCustomerDebt> emptyDebtPage = new Page<>(1, 10);
+        emptyDebtPage.setRecords(List.of());
+        emptyDebtPage.setTotal(0);
+        when(customerScoreMapper.selectPage(any(), any())).thenReturn(emptyRiskPage);
+        when(customerDebtMapper.selectPage(any(), any())).thenReturn(emptyDebtPage);
+
+        CustomerServiceImpl service = new CustomerServiceImpl(
+                customerMapper,
+                customerScoreMapper,
+                customerDebtMapper,
+                customerContractMapper,
+                customerStatusLogMapper,
+                customerTradeMapper,
+                fileMapper,
+                userMapper,
+                currentUserProvider
+        );
+
+        service.pageRisks(new CustomerRiskPageQuery());
+        service.pageDebts(new CustomerDebtPageQuery());
+
+        // 非超管查询风险/负债列表时，必须用子查询把范围限制在"本人创建的客户"上，否则会越权暴露全部客户数据。
+        // 改用 inSql 子查询后不再先 selectList 拉全量 ID，这里直接断言下发给分页查询的条件里带上了归属过滤。
+        ArgumentCaptor<LambdaQueryWrapper> riskCaptor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        verify(customerScoreMapper).selectPage(any(), riskCaptor.capture());
+        assertThat(riskCaptor.getValue().getSqlSegment()).contains("cust_customer", "created_by = 7");
+
+        ArgumentCaptor<LambdaQueryWrapper> debtCaptor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        verify(customerDebtMapper).selectPage(any(), debtCaptor.capture());
+        assertThat(debtCaptor.getValue().getSqlSegment()).contains("cust_customer", "created_by = 7");
     }
 
     private SysFile buildFile(Long id, String fileName) {
