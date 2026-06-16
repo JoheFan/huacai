@@ -602,7 +602,7 @@ onMounted(async () => {
             <div class="permission-section__header">
               <div>
                 <h4>数据权限</h4>
-                <p>只对已开放页面的业务模块生效。</p>
+                <p>只对已开放页面的业务模块生效。「本部门」「本部门及下级」尚未启用，选择后按「仅本人」生效。</p>
               </div>
             </div>
             <div class="scope-grid">
@@ -626,8 +626,8 @@ onMounted(async () => {
                   @update:model-value="setModuleScope(item.moduleCode, $event)"
                 >
                   <el-option label="全部数据" value="ALL" />
-                  <el-option label="本部门及下级" value="ORG_AND_SUB" />
-                  <el-option label="本部门数据" value="ORG" />
+                  <el-option label="本部门及下级（未启用）" value="ORG_AND_SUB" disabled />
+                  <el-option label="本部门数据（未启用）" value="ORG" disabled />
                   <el-option label="仅本人数据" value="SELF" />
                 </el-select>
               </section>

@@ -433,7 +433,7 @@ onMounted(fetchList)
             <div class="permission-section">
               <div class="permission-section__header">
                 <span>数据权限</span>
-                <small>仅对具备页面权限的业务模块生效。</small>
+                <small>仅对具备页面权限的业务模块生效。「本部门」「本部门及下级」尚未启用，选择后按「仅本人」生效。</small>
               </div>
               <div class="permission-scope-list">
                 <section v-for="item in scopedModuleItems" :key="item.moduleCode" class="permission-scope-row">
@@ -443,8 +443,8 @@ onMounted(fetchList)
                   </div>
                   <el-select v-model="permissionDraft.dataScopes[item.moduleCode]" placeholder="请选择数据范围">
                     <el-option label="全部数据" value="ALL" />
-                    <el-option label="本部门及下级" value="ORG_AND_SUB" />
-                    <el-option label="本部门数据" value="ORG" />
+                    <el-option label="本部门及下级（未启用）" value="ORG_AND_SUB" disabled />
+                    <el-option label="本部门数据（未启用）" value="ORG" disabled />
                     <el-option label="仅本人数据" value="SELF" />
                   </el-select>
                 </section>
