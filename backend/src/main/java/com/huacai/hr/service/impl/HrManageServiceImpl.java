@@ -712,7 +712,9 @@ public class HrManageServiceImpl implements HrManageService {
         AuthUser currentUser = getCurrentAuthUser();
         LambdaQueryWrapper<HrTransitionApply> wrapper = Wrappers.lambdaQuery();
 
-        if ("my".equals(query.getScope())) {
+        // "全部"范围只对 HR/ADMIN 开放；其余用户即便选"全部"也只能看本人提交的，避免越权列出全员申请
+        boolean canViewAll = hasRole(currentUser, "HR") || hasRole(currentUser, "ADMIN");
+        if ("my".equals(query.getScope()) || !canViewAll) {
             wrapper.eq(HrTransitionApply::getApplicantId, currentUser.getUserId());
         }
 
@@ -733,6 +735,7 @@ public class HrManageServiceImpl implements HrManageService {
         if (apply == null) {
             throw new BusinessException("转正申请不存在");
         }
+        requireCanViewTransition(apply);
         return toTransitionApplyVO(apply, canCurrentUserApproveTransition(apply));
     }
 
@@ -779,6 +782,7 @@ public class HrManageServiceImpl implements HrManageService {
         if (apply == null) {
             throw new BusinessException("转正申请不存在");
         }
+        requireCanEditTransition(apply);
         if (!"DRAFT".equals(apply.getProcessStatus()) && !"REJECTED".equals(apply.getProcessStatus())) {
             throw new BusinessException("只有草稿或驳回状态可以编辑");
         }
@@ -1063,6 +1067,46 @@ public class HrManageServiceImpl implements HrManageService {
         }
     }
 
+    private boolean isApplicant(Long applicantId, AuthUser user) {
+        return user != null && applicantId != null && applicantId.equals(user.getUserId());
+    }
+
+    /** 查看权：申请人 / HR / ADMIN / 当前阶段可审批者；不放开"同部门"避免同事互看 */
+    private void requireCanViewTransition(HrTransitionApply apply) {
+        AuthUser user = getCurrentAuthUser();
+        if (isApplicant(apply.getApplicantId(), user) || hasRole(user, "HR") || hasRole(user, "ADMIN")
+                || canCurrentUserApproveTransition(apply)) {
+            return;
+        }
+        throw new BusinessException("无权查看此申请");
+    }
+
+    private void requireCanViewSalaryAdjust(HrSalaryAdjustApply apply) {
+        AuthUser user = getCurrentAuthUser();
+        if (isApplicant(apply.getApplicantId(), user) || hasRole(user, "HR") || hasRole(user, "ADMIN")
+                || canCurrentUserApproveSalaryAdjust(apply)) {
+            return;
+        }
+        throw new BusinessException("无权查看此申请");
+    }
+
+    /** 编辑权：仅申请人本人或 ADMIN（草稿/驳回回到本人手里修改） */
+    private void requireCanEditTransition(HrTransitionApply apply) {
+        AuthUser user = getCurrentAuthUser();
+        if (isApplicant(apply.getApplicantId(), user) || hasRole(user, "ADMIN")) {
+            return;
+        }
+        throw new BusinessException("只能编辑本人提交的申请");
+    }
+
+    private void requireCanEditSalaryAdjust(HrSalaryAdjustApply apply) {
+        AuthUser user = getCurrentAuthUser();
+        if (isApplicant(apply.getApplicantId(), user) || hasRole(user, "ADMIN")) {
+            return;
+        }
+        throw new BusinessException("只能编辑本人提交的申请");
+    }
+
     private boolean hasRole(AuthUser user, String role) {
         if (user == null || user.getRoles() == null) {
             return false;
@@ -1153,7 +1197,9 @@ public class HrManageServiceImpl implements HrManageService {
         AuthUser currentUser = getCurrentAuthUser();
         LambdaQueryWrapper<HrSalaryAdjustApply> wrapper = Wrappers.lambdaQuery();
 
-        if ("my".equals(query.getScope())) {
+        // "全部"范围只对 HR/ADMIN 开放；其余用户即便选"全部"也只能看本人提交的，避免越权列出全员调薪
+        boolean canViewAll = hasRole(currentUser, "HR") || hasRole(currentUser, "ADMIN");
+        if ("my".equals(query.getScope()) || !canViewAll) {
             wrapper.eq(HrSalaryAdjustApply::getApplicantId, currentUser.getUserId());
         }
 
@@ -1174,6 +1220,7 @@ public class HrManageServiceImpl implements HrManageService {
         if (apply == null) {
             throw new BusinessException("调薪申请不存在");
         }
+        requireCanViewSalaryAdjust(apply);
         return toSalaryAdjustApplyVO(apply, canCurrentUserApproveSalaryAdjust(apply));
     }
 
@@ -1224,6 +1271,7 @@ public class HrManageServiceImpl implements HrManageService {
         if (apply == null) {
             throw new BusinessException("调薪申请不存在");
         }
+        requireCanEditSalaryAdjust(apply);
         if (!"DRAFT".equals(apply.getProcessStatus()) && !"REJECTED".equals(apply.getProcessStatus())) {
             throw new BusinessException("只有草稿或驳回状态可以编辑");
         }

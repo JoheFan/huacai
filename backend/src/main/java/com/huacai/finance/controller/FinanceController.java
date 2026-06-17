@@ -16,6 +16,7 @@ import com.huacai.finance.vo.ExpenseVO;
 import com.huacai.finance.vo.IncomeVO;
 import com.huacai.finance.vo.PayeeVO;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -62,13 +63,13 @@ public class FinanceController {
     }
 
     @PostMapping("/payees")
-    public ApiResponse<Void> createPayee(@RequestBody PayeeSaveRequest request) {
+    public ApiResponse<Void> createPayee(@Valid @RequestBody PayeeSaveRequest request) {
         finPayeeService.createPayee(request);
         return ApiResponse.success();
     }
 
     @PutMapping("/payees/{id}")
-    public ApiResponse<Void> updatePayee(@PathVariable Long id, @RequestBody PayeeSaveRequest request) {
+    public ApiResponse<Void> updatePayee(@PathVariable Long id, @Valid @RequestBody PayeeSaveRequest request) {
         finPayeeService.updatePayee(id, request);
         return ApiResponse.success();
     }

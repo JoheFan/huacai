@@ -77,8 +77,21 @@ public class FinReimbursementServiceImpl implements FinReimbursementService {
         AuthUser currentUser = getCurrentAuthUser();
         LambdaQueryWrapper<FinReimbursementApply> wrapper = Wrappers.lambdaQuery();
 
+        // 列表可见范围与单条 canViewReimbursement 对齐：
+        // FINANCE/ADMIN/超管 可看全部；其余用户即便选"全部"也只能看本人提交或本部门的，避免越权列出全公司报销
+        boolean canViewAll = currentUser.isSuperAdmin()
+                || (currentUser.getRoles() != null
+                        && (currentUser.getRoles().contains("FINANCE") || currentUser.getRoles().contains("ADMIN")));
         if ("my".equals(query.getScope())) {
             wrapper.eq(FinReimbursementApply::getApplicantId, currentUser.getUserId());
+        } else if (!canViewAll) {
+            Long myOrgId = currentUser.getOrgId();
+            wrapper.and(w -> {
+                w.eq(FinReimbursementApply::getApplicantId, currentUser.getUserId());
+                if (myOrgId != null) {
+                    w.or().eq(FinReimbursementApply::getApplicantOrgId, myOrgId);
+                }
+            });
         }
 
         if (StringUtils.hasText(query.getKeyword())) {
