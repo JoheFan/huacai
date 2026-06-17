@@ -75,6 +75,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         if (query.getOwnerUserId() != null) {
             wrapper.eq(OppOpportunity::getOwnerUserId, query.getOwnerUserId());
         }
+        applyOpportunityScope(wrapper);
         if (StringUtils.hasText(query.getKeyword())) {
             List<Long> customerIds = findCustomerIdsByKeyword(query.getKeyword());
             if (!customerIds.isEmpty()) {
@@ -204,7 +205,12 @@ public class OpportunityServiceImpl implements OpportunityService {
                 .orderByDesc(OppFollowRecord::getId);
 
         if (query.getOpportunityId() != null) {
+            // 指定商机时校验对该商机的访问权（getOpportunityOrThrow 内含归属校验）
+            getOpportunityOrThrow(query.getOpportunityId());
             wrapper.eq(OppFollowRecord::getOpportunityId, query.getOpportunityId());
+        } else {
+            // 未指定商机时，仅返回当前用户可见商机下的跟进记录，避免越权列出全部
+            applyFollowRecordScope(wrapper);
         }
 
         Page<OppFollowRecord> result = followRecordMapper.selectPage(page, wrapper);
@@ -278,6 +284,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         if (opportunity == null) {
             throw new BusinessException("商机不存在");
         }
+        validateOpportunityAccess(opportunity);
         return opportunity;
     }
 
@@ -286,7 +293,47 @@ public class OpportunityServiceImpl implements OpportunityService {
         if (record == null) {
             throw new BusinessException("跟进记录不存在");
         }
+        // 跟进记录的访问权随其所属商机：校验对父商机的归属
+        if (record.getOpportunityId() != null) {
+            getOpportunityOrThrow(record.getOpportunityId());
+        }
         return record;
+    }
+
+    /**
+     * 商机行级隔离：非超管仅能访问本人创建的商机。
+     * 缺少该校验会导致商机及跟进记录的读/改/删全部越权(IDOR)。
+     */
+    private void validateOpportunityAccess(OppOpportunity opportunity) {
+        currentUserProvider.getCurrentUser().ifPresent(authUser -> {
+            if (!authUser.isSuperAdmin() && !Objects.equals(opportunity.getCreatedBy(), authUser.getUserId())) {
+                throw new BusinessException("无权访问此商机数据");
+            }
+        });
+    }
+
+    private void applyOpportunityScope(LambdaQueryWrapper<OppOpportunity> wrapper) {
+        currentUserProvider.getCurrentUser().ifPresent(authUser -> {
+            if (!authUser.isSuperAdmin()) {
+                wrapper.eq(OppOpportunity::getCreatedBy, authUser.getUserId());
+            }
+        });
+    }
+
+    private void applyFollowRecordScope(LambdaQueryWrapper<OppFollowRecord> wrapper) {
+        currentUserProvider.getCurrentUser().ifPresent(authUser -> {
+            if (authUser.isSuperAdmin()) {
+                return;
+            }
+            List<Long> accessibleOpportunityIds = opportunityMapper.selectList(new LambdaQueryWrapper<OppOpportunity>()
+                            .select(OppOpportunity::getId)
+                            .eq(OppOpportunity::getCreatedBy, authUser.getUserId()))
+                    .stream()
+                    .map(OppOpportunity::getId)
+                    .toList();
+            wrapper.in(OppFollowRecord::getOpportunityId,
+                    accessibleOpportunityIds.isEmpty() ? List.of(-1L) : accessibleOpportunityIds);
+        });
     }
 
     private CustCustomer getCustomerOrThrow(Long customerId) {
