@@ -91,10 +91,13 @@ main() {
 
   ensure_migration_table
 
+  # 用字典序(LC_ALL=C)而非 sort -V：本目录存在 V0xx 与 V2_xxx 两套命名，
+  # 只有字典序能给出正确的时间顺序(V002→…→V011→V2_060→…→V2_140)；
+  # sort -V 会把 V2_xxx 整组错排到 V0xx 之前，导致依赖在前的迁移先于被依赖项执行。
   while IFS= read -r script_path; do
     [[ -n "$script_path" ]] || continue
     apply_script "$script_path"
-  done < <(find "$MIGRATION_DIR" -maxdepth 1 -type f -name '*.sql' | sort -V)
+  done < <(find "$MIGRATION_DIR" -maxdepth 1 -type f -name '*.sql' | LC_ALL=C sort)
 
   log "所有 migration 已处理完成"
 }

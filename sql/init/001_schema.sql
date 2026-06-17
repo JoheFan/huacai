@@ -429,6 +429,7 @@ CREATE TABLE `cust_customer_trade` (
   `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_flag` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标记',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
   PRIMARY KEY (`id`),
   KEY `idx_cust_customer_trade_customer_id` (`customer_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户交易信息表';
