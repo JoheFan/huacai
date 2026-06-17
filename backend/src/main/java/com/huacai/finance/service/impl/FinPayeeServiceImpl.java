@@ -9,6 +9,7 @@ import com.huacai.finance.dto.PayeeSaveRequest;
 import com.huacai.finance.entity.FinPayee;
 import com.huacai.finance.mapper.FinPayeeMapper;
 import com.huacai.finance.service.FinPayeeService;
+import com.huacai.common.util.PiiMaskUtil;
 import com.huacai.finance.vo.PayeeVO;
 import com.huacai.security.AuthUser;
 import com.huacai.security.CurrentUserProvider;
@@ -38,11 +39,20 @@ public class FinPayeeServiceImpl implements FinPayeeService {
                 .orderByDesc(FinPayee::getId);
         Page<FinPayee> page = new Page<>(pageNum, pageSize);
         Page<FinPayee> result = payeeMapper.selectPage(page, wrapper);
+        // 收款方列表为广暴露的显示面：银行账号脱敏；完整值仅在 getPayee(编辑)返回
         return new PageResponse<>(
-                result.getRecords().stream().map(this::toVO).toList(),
+                result.getRecords().stream().map(this::toMaskedListVO).toList(),
                 result.getTotal(),
                 pageNum,
                 pageSize
+        );
+    }
+
+    private PayeeVO toMaskedListVO(FinPayee p) {
+        return new PayeeVO(
+                p.getId(), p.getPayeeName(), p.getPayeeType(),
+                p.getBankName(), PiiMaskUtil.maskBankAccount(p.getBankAccount()), p.getContactName(),
+                PiiMaskUtil.maskPhone(p.getContactPhone()), p.getStatus(), p.getRemark(), p.getCreatedAt()
         );
     }
 

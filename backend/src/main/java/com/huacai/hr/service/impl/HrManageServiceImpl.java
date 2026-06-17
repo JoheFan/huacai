@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huacai.common.exception.BusinessException;
 import com.huacai.common.model.PageResponse;
+import com.huacai.common.util.PiiMaskUtil;
 import com.huacai.hr.dto.*;
 import com.huacai.hr.entity.*;
 import com.huacai.hr.mapper.*;
@@ -234,7 +235,7 @@ public class HrManageServiceImpl implements HrManageService {
         employee.setTalentFlag(request.talentFlag());
         employee.setCreateSystemAccount(request.createSystemAccount());
         employee.setSystemUsername(request.systemUsername());
-        employee.setSystemPasswordPlain(request.systemPasswordPlain());
+        // 不再持久化明文密码：密码仅用于下方 createSystemAccount 加密写入 sys_user
         employee.setOrgId(request.orgId());
         employee.setJobTitle(request.jobTitle());
         employee.setRemark(request.remark());
@@ -302,9 +303,7 @@ public class HrManageServiceImpl implements HrManageService {
             employee.setCreateSystemAccount(request.createSystemAccount());
             if (request.createSystemAccount() == 1 && StringUtils.hasText(request.systemUsername())) {
                 employee.setSystemUsername(request.systemUsername());
-                if (StringUtils.hasText(request.systemPasswordPlain())) {
-                    employee.setSystemPasswordPlain(request.systemPasswordPlain());
-                }
+                // 不再持久化明文密码：密码仅用于下方 createSystemAccount 加密写入 sys_user
             }
         }
         if (request.orgId() != null) employee.setOrgId(request.orgId());
@@ -1681,12 +1680,14 @@ public class HrManageServiceImpl implements HrManageService {
             SysOrg org = orgMapper.selectById(e.getOrgId());
             orgName = org != null ? org.getOrgName() : null;
         }
+        // 花名册列表/下拉为广暴露的显示面：身份证/手机/紧急联系电话/银行卡脱敏；
+        // 完整值仅在员工详情(EmployeeDetailVO)按 HR 权限返回。
         return new EmployeeVO(e.getId(), e.getEmployeeCode(), e.getRealName(), e.getGender(),
-                e.getIdCardNo(), e.getBirthday(), e.getAge(), e.getNation(), e.getPoliticalStatus(),
-                e.getHometown(), e.getMaritalStatus(), e.getPhone(), e.getEmail(),
+                PiiMaskUtil.maskIdCard(e.getIdCardNo()), e.getBirthday(), e.getAge(), e.getNation(), e.getPoliticalStatus(),
+                e.getHometown(), e.getMaritalStatus(), PiiMaskUtil.maskPhone(e.getPhone()), e.getEmail(),
                 e.getGraduateSchool(), e.getHighestEducation(), e.getWorkStartDate(),
-                e.getHomeAddress(), e.getEmergencyContact(), e.getEmergencyContactPhone(),
-                e.getBankCardNo(), e.getIdPhotoUrl(), e.getEmploymentStatus(), e.getTalentFlag(),
+                e.getHomeAddress(), e.getEmergencyContact(), PiiMaskUtil.maskPhone(e.getEmergencyContactPhone()),
+                PiiMaskUtil.maskBankAccount(e.getBankCardNo()), e.getIdPhotoUrl(), e.getEmploymentStatus(), e.getTalentFlag(),
                 e.getCreateSystemAccount(), e.getSystemUsername(), e.getOrgId(), orgName,
                 e.getJobTitle(), e.getRemark(), e.getCreatedAt(), e.getUpdatedAt());
     }

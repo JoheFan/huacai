@@ -36,7 +36,6 @@ public class HrEmployee extends AuditableEntity {
     private String talentFlag;
     private Integer createSystemAccount;
     private String systemUsername;
-    private String systemPasswordPlain;
     private Long orgId;
     private String jobTitle;
     private String remark;
@@ -91,8 +90,6 @@ public class HrEmployee extends AuditableEntity {
     public void setCreateSystemAccount(Integer createSystemAccount) { this.createSystemAccount = createSystemAccount; }
     public String getSystemUsername() { return systemUsername; }
     public void setSystemUsername(String systemUsername) { this.systemUsername = systemUsername; }
-    public String getSystemPasswordPlain() { return systemPasswordPlain; }
-    public void setSystemPasswordPlain(String systemPasswordPlain) { this.systemPasswordPlain = systemPasswordPlain; }
     public Long getOrgId() { return orgId; }
     public void setOrgId(Long orgId) { this.orgId = orgId; }
     public String getJobTitle() { return jobTitle; }
