@@ -1,11 +1,17 @@
 package com.huacai.loan.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.huacai.common.exception.BusinessException;
 import com.huacai.customer.entity.CustCustomer;
 import com.huacai.customer.mapper.CustomerMapper;
+import com.huacai.loan.dto.LoanOrderSaveRequest;
 import com.huacai.loan.entity.LoanOrder;
 import com.huacai.loan.entity.LoanRepayment;
 import com.huacai.loan.mapper.LoanCustomerSummaryMapper;
@@ -15,10 +21,13 @@ import com.huacai.loan.query.LoanOrderPageQuery;
 import com.huacai.loan.query.LoanRepaymentPageQuery;
 import com.huacai.loan.vo.LoanOrderOverviewVO;
 import com.huacai.loan.vo.LoanRepaymentSummaryVO;
+import com.huacai.security.AuthUser;
 import com.huacai.security.CurrentUserProvider;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -159,5 +168,54 @@ class LoanManageServiceImplTest {
         assertThat(summary.repaymentAmountTotal()).isEqualByComparingTo("25000");
         assertThat(summary.principalAmountTotal()).isEqualByComparingTo("17500");
         assertThat(summary.interestAmountTotal()).isEqualByComparingTo("7500");
+    }
+
+    @Test
+    void createOrderDeniedWhenUserLacksBankCapitalAccess() {
+        AuthUser user = mock(AuthUser.class);
+        when(user.isSuperAdmin()).thenReturn(false);
+        when(user.getDataScopes()).thenReturn(Map.of("loan-orders-self", "SELF")); // 只有自营权限，无机构权限
+        when(currentUserProvider.getCurrentUser()).thenReturn(Optional.of(user));
+        CustCustomer customer = new CustCustomer();
+        customer.setId(6L);
+        when(customerMapper.selectById(6L)).thenReturn(customer);
+
+        LoanManageServiceImpl service = new LoanManageServiceImpl(
+                loanOrderMapper, loanRepaymentMapper, loanCustomerSummaryMapper, customerMapper, currentUserProvider);
+
+        LoanOrderSaveRequest request = new LoanOrderSaveRequest(
+                6L, "BANK", "某银行", LocalDate.of(2026, 4, 1),
+                new BigDecimal("5000"), new BigDecimal("20000"), new BigDecimal("100000"),
+                null, new BigDecimal("3000"), 2, "ACTIVE", "测试");
+
+        assertThatThrownBy(() -> service.createOrder(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("无权访问");
+        verify(loanOrderMapper, never()).insert(any(LoanOrder.class));
+    }
+
+    @Test
+    void createOrderAllowedWhenUserHasMatchingCapitalAccess() {
+        AuthUser user = mock(AuthUser.class);
+        when(user.isSuperAdmin()).thenReturn(false);
+        when(user.getDataScopes()).thenReturn(Map.of("loan-orders-self", "SELF"));
+        when(currentUserProvider.getCurrentUser()).thenReturn(Optional.of(user));
+        when(currentUserProvider.getCurrentUserId()).thenReturn(99L);
+        CustCustomer customer = new CustCustomer();
+        customer.setId(6L);
+        when(customerMapper.selectById(6L)).thenReturn(customer);
+        // 自营订单：有 self 权限应放行并落库
+
+        LoanManageServiceImpl service = new LoanManageServiceImpl(
+                loanOrderMapper, loanRepaymentMapper, loanCustomerSummaryMapper, customerMapper, currentUserProvider);
+
+        LoanOrderSaveRequest request = new LoanOrderSaveRequest(
+                6L, "SELF", null, LocalDate.of(2026, 4, 1),
+                new BigDecimal("5000"), new BigDecimal("20000"), new BigDecimal("100000"),
+                null, new BigDecimal("3000"), 2, "ACTIVE", "测试");
+
+        service.createOrder(request);
+
+        verify(loanOrderMapper).insert(any(LoanOrder.class));
     }
 }
