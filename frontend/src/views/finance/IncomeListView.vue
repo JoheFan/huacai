@@ -1,19 +1,31 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import { incomeApi, type IncomeVO } from '../../api/finance'
+import { useListPage } from '../../composables/useListPage'
 
-const loading = ref(false)
-const rows = ref<IncomeVO[]>([])
-const total = ref(0)
-
-const filters = reactive({
-  keyword: '',
-  incomeType: '',
-  pageNum: 1,
-  pageSize: 20,
-})
+// 列表分页/搜索/加载逻辑统一走 useListPage，避免重复样板
+const {
+  loading,
+  list: rows,
+  total,
+  keyword,
+  pagination,
+  filters,
+  fetchList,
+  handleSearch,
+  handleReset,
+  handlePageChange,
+  handleSizeChange,
+} = useListPage<IncomeVO>((params) =>
+  incomeApi.page({
+    keyword: params.keyword || undefined,
+    incomeType: (params.incomeType as string) || undefined,
+    pageNum: params.pageNum,
+    pageSize: params.pageSize,
+  }),
+)
 
 const drawerVisible = ref(false)
 const drawerTitle = ref('新增收入')
@@ -29,47 +41,6 @@ const form = reactive({
   payerName: '',
   remark: '',
 })
-
-const fetchList = async () => {
-  loading.value = true
-  try {
-    const data = await incomeApi.page({
-      keyword: filters.keyword || undefined,
-      incomeType: filters.incomeType || undefined,
-      pageNum: filters.pageNum,
-      pageSize: filters.pageSize,
-    })
-    rows.value = data.records
-    total.value = data.total
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '加载失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSearch = async () => {
-  filters.pageNum = 1
-  await fetchList()
-}
-
-const handleReset = async () => {
-  filters.keyword = ''
-  filters.incomeType = ''
-  filters.pageNum = 1
-  await fetchList()
-}
-
-const handlePageChange = async (page: number) => {
-  filters.pageNum = page
-  await fetchList()
-}
-
-const handleSizeChange = async (size: number) => {
-  filters.pageSize = size
-  filters.pageNum = 1
-  await fetchList()
-}
 
 const openCreate = () => {
   isEdit.value = false
@@ -162,14 +133,10 @@ const formatDate = (dateStr: string | undefined | null) => {
   return String(dateStr).split('T')[0]
 }
 
-const formatAmount = (amount: any) => {
+const formatAmount = (amount: number | string | null | undefined) => {
   if (amount == null) return '-'
   return Number(amount).toLocaleString('zh-CN', { minimumFractionDigits: 2 })
 }
-
-onMounted(() => {
-  void fetchList()
-})
 </script>
 
 <template>
@@ -192,7 +159,7 @@ onMounted(() => {
       <div class="card__section list-toolbar">
         <div class="list-toolbar__filters">
           <el-input
-            v-model="filters.keyword"
+            v-model="keyword"
             placeholder="收入名称"
             clearable
             @keyup.enter="handleSearch"
@@ -246,8 +213,8 @@ onMounted(() => {
         </div>
 
       <el-pagination
-        v-model:current-page="filters.pageNum"
-        v-model:page-size="filters.pageSize"
+        v-model:current-page="pagination.pageNum"
+        v-model:page-size="pagination.pageSize"
         :page-sizes="[10, 20, 50]"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
